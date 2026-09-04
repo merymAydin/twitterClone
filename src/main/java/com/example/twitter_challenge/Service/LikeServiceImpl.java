@@ -8,6 +8,9 @@ import com.example.twitter_challenge.Repository.TweetRepository;
 import com.example.twitter_challenge.Repository.UserRepository;
 import com.example.twitter_challenge.dto.request.CreateLikeRequest;
 import com.example.twitter_challenge.dto.response.LikeResponse;
+import com.example.twitter_challenge.exception.LikeAlreadyExistsException;
+import com.example.twitter_challenge.exception.TweetNotFoundException;
+import com.example.twitter_challenge.exception.UserNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -22,10 +25,6 @@ public class LikeServiceImpl implements LikeService{
         this.userRepository = userRepository;
         this.tweetRepository = tweetRepository;
     }
-    @Override
-    public Optional<Likes> findByTweetIdAndUserId(Long tweetId, Long userId) {
-        return likesRepository.findByTweetIdAndUserId(tweetId, userId);
-    }
 
     @Override
     public LikeResponse createLike(CreateLikeRequest request) {
@@ -35,10 +34,15 @@ public class LikeServiceImpl implements LikeService{
                         request.userId()
                 );
         if (existingLike.isPresent()) {
-            throw new RuntimeException("Like already exists");
+            throw new LikeAlreadyExistsException(
+                    "User " + request.userId() + " has already liked tweet " + request.tweetId()
+            );
         }
-        Tweet tweet = tweetRepository.findById(request.tweetId()).orElseThrow();
-        User user = userRepository.findById(request.userId()).orElseThrow();
+        Tweet tweet = tweetRepository.findById(request.tweetId()).orElseThrow(()-> new TweetNotFoundException("Tweet with" + request.tweetId()+ "not found"));
+        User user = userRepository.findById(request.userId())
+                .orElseThrow(() ->
+                        new UserNotFoundException("User with " + request.userId() + " not found")
+                );
 
         Likes likes = new Likes(tweet, user);
         Likes savedLike = likesRepository.save(likes);

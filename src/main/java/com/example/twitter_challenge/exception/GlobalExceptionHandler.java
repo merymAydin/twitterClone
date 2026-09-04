@@ -11,4 +11,20 @@ public class GlobalExceptionHandler {
     public ResponseEntity<?> handleUserNotFound(UserNotFoundException exception) {
         return new ResponseEntity<>(exception.getMessage(), HttpStatus.NOT_FOUND);
     }
+    @ExceptionHandler(TweetNotFoundException.class)
+    public ResponseEntity<?> handleTweetNotFound(TweetNotFoundException exception) {
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.NOT_FOUND);
+    }
+    @ExceptionHandler(LikeAlreadyExistsException.class)
+    public ResponseEntity<?> handleLikeFound(LikeAlreadyExistsException exception) {
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.CONFLICT);
+    }
+    @ExceptionHandler(BookmarkAlreadyExistsException.class)
+    public ResponseEntity<?> handleLikeFound(BookmarkAlreadyExistsException exception) {
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.CONFLICT);
+    }
+    @ExceptionHandler(FollowerAlreadyExistsException.class)
+    public ResponseEntity<?> handleFollowerFound(FollowerAlreadyExistsException exception) {
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.CONFLICT);
+    }
 }

@@ -17,7 +17,7 @@ public class LikeController {
     public LikeController(LikeService likeService) {
         this.likeService = likeService;
     }
-    @PostMapping("/{tweetId}/{userId}")
+    @PostMapping
     public LikeResponse createLike(@RequestBody CreateLikeRequest request) {
         return likeService.createLike(request);
     }
