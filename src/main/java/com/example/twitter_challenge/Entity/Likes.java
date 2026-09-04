@@ -1,24 +1,26 @@
 package com.example.twitter_challenge.Entity;
 
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
 @NoArgsConstructor
+@Data
 @AllArgsConstructor
-@Table(schema = "public", name = "likes")
+@Table(schema = "public", name = "likes",uniqueConstraints = @UniqueConstraint(columnNames = {"tweet_id", "user_id"}))
 public class Likes extends EntityBase{
 
-    //todo: teknik borc -> Tweet classi yazinca burasi ile oneToMany seklinde bagla
-    private Integer tweet_id;
+    @ManyToOne
+    @JoinColumn(name = "tweet_id")
+    private Tweet tweet;
 
 
-    //todo: teknik borc -> User classi yazinca burasi ile oneToMany seklinde bagla
-    private Integer user_id;
 
-    //private User user;
-    //private Tweet tweet;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
 }
