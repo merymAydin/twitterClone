@@ -7,6 +7,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import jakarta.persistence.Embedded;
+import org.hibernate.annotations.Comments;
+
+import java.util.List;
 
 @Entity
 @NoArgsConstructor
@@ -26,11 +29,16 @@ public class Tweet extends EntityBase{
     @Embedded
     private Location location;
 
-    //retweet
-    private Long parent_id;
+    @ManyToOne
+    @JoinColumn(name = "parent_id")
+    private Tweet parent;
 
 
-    //comments
+    //retweet/quote
+    @OneToMany(mappedBy = "tweet")
+    private List<Comment> comments;
     //likes
+    @OneToMany(mappedBy = "tweet")
+    private List<Likes> likes;
 
 }

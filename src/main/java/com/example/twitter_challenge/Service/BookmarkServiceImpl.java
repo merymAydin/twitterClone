@@ -6,14 +6,17 @@ import com.example.twitter_challenge.Entity.User;
 import com.example.twitter_challenge.Repository.BookmarkRepository;
 import com.example.twitter_challenge.Repository.TweetRepository;
 import com.example.twitter_challenge.Repository.UserRepository;
+import com.example.twitter_challenge.Service.interfaces.BookmarkService;
 import com.example.twitter_challenge.dto.request.CreateBookmarkRequest;
 import com.example.twitter_challenge.dto.response.BookmarkResponse;
+import com.example.twitter_challenge.dto.response.TweetResponse;
 import com.example.twitter_challenge.exception.BookmarkAlreadyExistsException;
-import com.example.twitter_challenge.exception.LikeAlreadyExistsException;
+import com.example.twitter_challenge.exception.BookmarkNotFoundException;
 import com.example.twitter_challenge.exception.TweetNotFoundException;
 import com.example.twitter_challenge.exception.UserNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -27,7 +30,7 @@ public class BookmarkServiceImpl implements BookmarkService {
         this.tweetRepository = tweetRepository;
     }
     @Override
-    public BookmarkResponse createBookMark(CreateBookmarkRequest request) {
+    public BookmarkResponse createBookmark(CreateBookmarkRequest request) {
         Optional<Bookmark> existingBookmark = bookmarkRepository.findByTweetIdAndUserId(request.tweetId(), request.userId());
         if (existingBookmark.isPresent()) {
             throw new BookmarkAlreadyExistsException(
@@ -42,17 +45,32 @@ public class BookmarkServiceImpl implements BookmarkService {
         Bookmark bookmark = new Bookmark(user,tweet);
         Bookmark savedBookmark = bookmarkRepository.save(bookmark);
         return new BookmarkResponse(savedBookmark.getUser().getId(), savedBookmark.getTweet().getId());
+    }
+
+    @Override
+    public void removeBookmark(CreateBookmarkRequest request) {
+        Bookmark bookmark = bookmarkRepository.findByTweetIdAndUserId(request.tweetId(), request.userId()).orElseThrow(()->
+                new BookmarkNotFoundException("Bookmark with" + request.tweetId() + " not found"));
+        bookmarkRepository.delete(bookmark);
+    }
+
+    @Override
+    public List<BookmarkResponse> findAllBookmarks() {
+        return bookmarkRepository.findAll()
+                .stream()
+                .map(bookmark -> new BookmarkResponse(
+                        bookmark.getUser().getId(),
+                        bookmark.getTweet().getId()
+                ))
+                .toList();
+    }
 
 
-
-
+    @Override
+    public BookmarkResponse findBookmarkById(Long id) {
+        Bookmark bookmark = bookmarkRepository.findById(id).orElseThrow(()-> new BookmarkNotFoundException("Bookmark with" + id + " not found"));
+        return new BookmarkResponse(bookmark.getUser().getId(), bookmark.getTweet().getId());
     }
 }
 
 
-
-//Bookmark oluştur
-//        ↓
-//save
-//        ↓
-//BookmarkResponse

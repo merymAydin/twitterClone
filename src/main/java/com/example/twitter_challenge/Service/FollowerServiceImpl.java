@@ -4,12 +4,16 @@ import com.example.twitter_challenge.Entity.Follower;
 import com.example.twitter_challenge.Entity.User;
 import com.example.twitter_challenge.Repository.FollowerRepository;
 import com.example.twitter_challenge.Repository.UserRepository;
+import com.example.twitter_challenge.Service.interfaces.FollowerService;
 import com.example.twitter_challenge.dto.request.CreateFollowerRequest;
+import com.example.twitter_challenge.dto.response.BookmarkResponse;
 import com.example.twitter_challenge.dto.response.FollowerResponse;
 import com.example.twitter_challenge.exception.FollowerAlreadyExistsException;
+import com.example.twitter_challenge.exception.FollowerNotFoundException;
 import com.example.twitter_challenge.exception.UserNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -47,4 +51,38 @@ public class FollowerServiceImpl implements FollowerService {
         Follower savedFollower = followerRepository.save(follower);
         return new FollowerResponse(savedFollower.getFollower().getId(), savedFollower.getFollowing().getId());
     }
+
+    @Override
+    public void removeFollower(CreateFollowerRequest  request) {
+        Follower follower = followerRepository.findByFollowerIdAndFollowingId(request.followerId(),request.followingId()).orElseThrow(
+                ()->new FollowerNotFoundException(
+                        "Follower relationship between user "
+                                + request.followerId()
+                                + " and user "
+                                + request.followingId()
+                                + " not found"
+                )
+        );
+        followerRepository.delete(follower);
+    }
+
+    @Override
+    public List<FollowerResponse> findAllFollowers() {
+        return followerRepository.findAll()
+                .stream()
+                .map(follower -> new FollowerResponse(
+                        follower.getFollower().getId(),
+                        follower.getFollowing().getId()
+                ))
+                .toList();
+    }
+
+
+
+    @Override
+    public FollowerResponse findFollowerById(Long id) {
+        Follower follower = followerRepository.findByFollowerIdAndFollowingId(id, id).orElseThrow(()->new FollowerNotFoundException("Follower Not Found"));
+        return new FollowerResponse(follower.getFollower().getId(), follower.getFollowing().getId());
+    }
+
 }

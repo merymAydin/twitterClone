@@ -2,7 +2,7 @@ package com.example.twitter_challenge.controller;
 
 
 import com.example.twitter_challenge.Entity.User;
-import com.example.twitter_challenge.Service.UserService;
+import com.example.twitter_challenge.Service.interfaces.UserService;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -22,5 +22,9 @@ public class UserController {
     @PostMapping
     public User createUser(@RequestBody User user) {
         return userService.save(user);
+    }
+    @DeleteMapping("/{id}")
+    public void deleteUser(@PathVariable Long id) {
+        userService.removeUser(id);
     }
 }

@@ -1,8 +1,6 @@
 package com.example.twitter_challenge.controller;
 
-import com.example.twitter_challenge.Entity.Likes;
-import com.example.twitter_challenge.Service.LikeService;
-import com.example.twitter_challenge.Service.UserService;
+import com.example.twitter_challenge.Service.interfaces.LikeService;
 import com.example.twitter_challenge.dto.request.CreateLikeRequest;
 import com.example.twitter_challenge.dto.response.LikeResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,5 +18,9 @@ public class LikeController {
     @PostMapping
     public LikeResponse createLike(@RequestBody CreateLikeRequest request) {
         return likeService.createLike(request);
+    }
+    @DeleteMapping
+    public void deleteLike(@RequestBody CreateLikeRequest request) {
+        likeService.removeLike(request);
     }
 }

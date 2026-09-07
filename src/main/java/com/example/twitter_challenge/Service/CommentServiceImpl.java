@@ -6,14 +6,17 @@ import com.example.twitter_challenge.Entity.User;
 import com.example.twitter_challenge.Repository.CommentRepository;
 import com.example.twitter_challenge.Repository.TweetRepository;
 import com.example.twitter_challenge.Repository.UserRepository;
+import com.example.twitter_challenge.Service.interfaces.CommentService;
 import com.example.twitter_challenge.dto.request.CreateCommentRequest;
 import com.example.twitter_challenge.dto.response.CommentResponse;
+import com.example.twitter_challenge.exception.CommentNotFound;
 import com.example.twitter_challenge.exception.TweetNotFoundException;
 import com.example.twitter_challenge.exception.UserNotFoundException;
 import org.springframework.stereotype.Service;
 
-@Service
+import java.util.List;
 
+@Service
 public class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
@@ -35,6 +38,30 @@ public class CommentServiceImpl implements CommentService {
         Comment savedComment = commentRepository.save(comment);
         return new CommentResponse(savedComment.getUser().getId(),savedComment.getTweet().getId(),savedComment.getContent());
 
+    }
+
+    @Override
+    public void removeComment(Long id) {
+        Comment comment = commentRepository.findById(id).orElseThrow(()-> new TweetNotFoundException("Tweet with" + id + "not found"));
+        commentRepository.delete(comment);
+    }
+
+    @Override
+    public List<CommentResponse> findAllComments() {
+        return commentRepository.findAll()
+                .stream()
+                .map(comment -> new CommentResponse(
+                        comment.getId(),
+                        comment.getTweet().getId(),
+                        comment.getContent()
+                ))
+                .toList();
+    }
+
+    @Override
+    public CommentResponse findCommentById(Long id) {
+        Comment comment = commentRepository.findById(id).orElseThrow(()-> new CommentNotFound("Comment " + id + "Not Found"));
+        return new CommentResponse(comment.getUser().getId(),comment.getTweet().getId(),comment.getContent());
     }
 }
 

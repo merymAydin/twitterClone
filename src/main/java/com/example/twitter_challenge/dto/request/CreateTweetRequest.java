@@ -4,5 +4,5 @@ import com.example.twitter_challenge.Utils.Commons.Location;
 
 
 
-public record CreateTweetRequest(String content, Long userId, Location location,Long tweetId) {
+public record CreateTweetRequest(String content, Long userId, Location location,Long parentId) {
 }
