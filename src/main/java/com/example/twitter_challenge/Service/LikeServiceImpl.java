@@ -1,18 +1,17 @@
 package com.example.twitter_challenge.Service;
 
 import com.example.twitter_challenge.Entity.Likes;
+import com.example.twitter_challenge.Entity.Statistics;
 import com.example.twitter_challenge.Entity.Tweet;
 import com.example.twitter_challenge.Entity.User;
 import com.example.twitter_challenge.Repository.LikesRepository;
+import com.example.twitter_challenge.Repository.StatisticsRepository;
 import com.example.twitter_challenge.Repository.TweetRepository;
 import com.example.twitter_challenge.Repository.UserRepository;
 import com.example.twitter_challenge.Service.interfaces.LikeService;
 import com.example.twitter_challenge.dto.request.CreateLikeRequest;
 import com.example.twitter_challenge.dto.response.LikeResponse;
-import com.example.twitter_challenge.exception.LikeAlreadyExistsException;
-import com.example.twitter_challenge.exception.LikeNotFoundException;
-import com.example.twitter_challenge.exception.TweetNotFoundException;
-import com.example.twitter_challenge.exception.UserNotFoundException;
+import com.example.twitter_challenge.exception.*;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,11 +22,13 @@ public class LikeServiceImpl implements LikeService {
     private final LikesRepository likesRepository;
     private final UserRepository userRepository;
     private final TweetRepository tweetRepository;
+    private final StatisticsRepository statisticsRepository;
 
-    public LikeServiceImpl(LikesRepository likesRepository, UserRepository userRepository, TweetRepository tweetRepository) {
+    public LikeServiceImpl(LikesRepository likesRepository, UserRepository userRepository, TweetRepository tweetRepository, StatisticsRepository statisticsRepository) {
         this.likesRepository = likesRepository;
         this.userRepository = userRepository;
         this.tweetRepository = tweetRepository;
+        this.statisticsRepository = statisticsRepository;
     }
 
     @Override
@@ -49,7 +50,17 @@ public class LikeServiceImpl implements LikeService {
                 );
 
         Likes likes = new Likes(tweet, user);
+
+
         Likes savedLike = likesRepository.save(likes);
+        Statistics statistics = statisticsRepository
+                .findByTweetId(savedLike.getTweet().getId())
+                .orElseThrow(() -> new StatisticsNotFoundException(
+                        "Statistics for tweet " + savedLike.getTweet().getId() + " not found"
+                ));
+        statistics.setLikes(statistics.getLikes() + 1);
+        statisticsRepository.save(statistics);
+
         return new LikeResponse(savedLike.getUser().getId(), savedLike.getTweet().getId());
 
     }
@@ -57,9 +68,13 @@ public class LikeServiceImpl implements LikeService {
     @Override
     public void removeLike(CreateLikeRequest request) {
          Likes like = likesRepository.findByTweetIdAndUserId(request.tweetId(), request.userId() ).orElseThrow(() ->
-                new LikeNotFoundException("Like with " + request.tweetId() + " not found")
+                new LikeNotFoundException("Like for tweet " + request.tweetId() + " not found")
         );
-         likesRepository.delete(like);
+        Statistics statistics =statisticsRepository.findByTweetId(like.getTweet().getId()).orElseThrow(() ->new StatisticsNotFoundException("Statistics for tweet " + like.getTweet().getId() + " not found"));
+        likesRepository.delete(like);
+        statistics.setLikes(statistics.getLikes() - 1);
+        statisticsRepository.save(statistics);
+
 
     }
 

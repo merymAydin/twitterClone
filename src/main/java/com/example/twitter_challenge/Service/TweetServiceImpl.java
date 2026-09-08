@@ -1,7 +1,9 @@
 package com.example.twitter_challenge.Service;
 
+import com.example.twitter_challenge.Entity.Statistics;
 import com.example.twitter_challenge.Entity.Tweet;
 import com.example.twitter_challenge.Entity.User;
+import com.example.twitter_challenge.Repository.StatisticsRepository;
 import com.example.twitter_challenge.Repository.TweetRepository;
 import com.example.twitter_challenge.Repository.UserRepository;
 import com.example.twitter_challenge.Service.interfaces.TweetService;
@@ -18,10 +20,12 @@ import java.util.List;
 public class TweetServiceImpl implements TweetService {
     private final UserRepository userRepository;
     private final TweetRepository tweetRepository;
+    private final StatisticsRepository statisticsRepository;
 
-    public TweetServiceImpl(UserRepository userRepository, TweetRepository tweetRepository) {
+    public TweetServiceImpl(UserRepository userRepository, TweetRepository tweetRepository, StatisticsRepository statisticsRepository) {
         this.userRepository = userRepository;
         this.tweetRepository = tweetRepository;
+        this.statisticsRepository = statisticsRepository;
     }
     @Override
     public TweetResponse createTweet(CreateTweetRequest request) {
@@ -45,6 +49,14 @@ public class TweetServiceImpl implements TweetService {
         tweet.setLocation(request.location());
         tweet.setParent(parentTweet);
         Tweet savedTweet = tweetRepository.save(tweet);
+        Statistics statistics =new Statistics();
+        statistics.setTweet(savedTweet);
+        statistics.setViews(0L);
+        statistics.setRetweets(0L);
+        statistics.setBookmarks(0L);
+        statistics.setComments(0L);
+        statistics.setLikes(0L);
+        statisticsRepository.save(statistics);
         return new TweetResponse(savedTweet.getContent(), savedTweet.getUser().getId(), savedTweet.getLocation(),
                 savedTweet.getParent() != null ? savedTweet.getParent().getId() : null);
     }

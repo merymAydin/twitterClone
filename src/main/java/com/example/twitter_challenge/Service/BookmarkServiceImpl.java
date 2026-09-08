@@ -1,19 +1,18 @@
 package com.example.twitter_challenge.Service;
 
 import com.example.twitter_challenge.Entity.Bookmark;
+import com.example.twitter_challenge.Entity.Statistics;
 import com.example.twitter_challenge.Entity.Tweet;
 import com.example.twitter_challenge.Entity.User;
 import com.example.twitter_challenge.Repository.BookmarkRepository;
+import com.example.twitter_challenge.Repository.StatisticsRepository;
 import com.example.twitter_challenge.Repository.TweetRepository;
 import com.example.twitter_challenge.Repository.UserRepository;
 import com.example.twitter_challenge.Service.interfaces.BookmarkService;
 import com.example.twitter_challenge.dto.request.CreateBookmarkRequest;
 import com.example.twitter_challenge.dto.response.BookmarkResponse;
 import com.example.twitter_challenge.dto.response.TweetResponse;
-import com.example.twitter_challenge.exception.BookmarkAlreadyExistsException;
-import com.example.twitter_challenge.exception.BookmarkNotFoundException;
-import com.example.twitter_challenge.exception.TweetNotFoundException;
-import com.example.twitter_challenge.exception.UserNotFoundException;
+import com.example.twitter_challenge.exception.*;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,10 +23,13 @@ public class BookmarkServiceImpl implements BookmarkService {
     private final BookmarkRepository bookmarkRepository;
     private final UserRepository userRepository;
     private final TweetRepository tweetRepository;
-    public BookmarkServiceImpl(BookmarkRepository bookmarkRepository, UserRepository userRepository, TweetRepository tweetRepository) {
+    private final StatisticsRepository statisticsRepository;
+
+    public BookmarkServiceImpl(BookmarkRepository bookmarkRepository, UserRepository userRepository, TweetRepository tweetRepository, StatisticsRepository statisticsRepository) {
         this.bookmarkRepository = bookmarkRepository;
         this.userRepository = userRepository;
         this.tweetRepository = tweetRepository;
+        this.statisticsRepository = statisticsRepository;
     }
     @Override
     public BookmarkResponse createBookmark(CreateBookmarkRequest request) {
@@ -44,6 +46,9 @@ public class BookmarkServiceImpl implements BookmarkService {
                 );
         Bookmark bookmark = new Bookmark(user,tweet);
         Bookmark savedBookmark = bookmarkRepository.save(bookmark);
+        Statistics statistics = statisticsRepository.findByTweetId(savedBookmark.getTweet().getId()).orElseThrow(()->new RuntimeException("Statistics for tweet " + savedBookmark.getTweet().getId() + " not found"));
+        statistics.setBookmarks(statistics.getBookmarks() + 1);
+        statisticsRepository.save(statistics);
         return new BookmarkResponse(savedBookmark.getUser().getId(), savedBookmark.getTweet().getId());
     }
 
@@ -51,6 +56,9 @@ public class BookmarkServiceImpl implements BookmarkService {
     public void removeBookmark(CreateBookmarkRequest request) {
         Bookmark bookmark = bookmarkRepository.findByTweetIdAndUserId(request.tweetId(), request.userId()).orElseThrow(()->
                 new BookmarkNotFoundException("Bookmark with" + request.tweetId() + " not found"));
+        Statistics statistics = statisticsRepository.findByTweetId(bookmark.getTweet().getId()).orElseThrow(()->new StatisticsNotFoundException("Statistics for tweet " + bookmark.getTweet().getId() + " not found"));
+        statistics.setBookmarks(statistics.getBookmarks() - 1);
+        statisticsRepository.save(statistics);
         bookmarkRepository.delete(bookmark);
     }
 

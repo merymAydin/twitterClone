@@ -66,6 +66,18 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
 
     }
+    @ExceptionHandler(StatisticsNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleStatisticsNotFound(StatisticsNotFoundException exception) {
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.NOT_FOUND,exception.getMessage(),new Date());
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+
+    }
+    @ExceptionHandler(FollowerSelfFollowException.class)
+    public ResponseEntity<ErrorResponse> handleFollowerSelfFollow(FollowerSelfFollowException exception) {
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST,exception.getMessage(),new Date());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+
+    }
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationErrors(
             MethodArgumentNotValidException exception) {

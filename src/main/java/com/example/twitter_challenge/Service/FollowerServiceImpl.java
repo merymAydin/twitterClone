@@ -10,6 +10,7 @@ import com.example.twitter_challenge.dto.response.BookmarkResponse;
 import com.example.twitter_challenge.dto.response.FollowerResponse;
 import com.example.twitter_challenge.exception.FollowerAlreadyExistsException;
 import com.example.twitter_challenge.exception.FollowerNotFoundException;
+import com.example.twitter_challenge.exception.FollowerSelfFollowException;
 import com.example.twitter_challenge.exception.UserNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +29,12 @@ public class FollowerServiceImpl implements FollowerService {
 
     @Override
     public FollowerResponse createFollower(CreateFollowerRequest request) {
+        if (request.followerId().equals(request.followingId())) {
+            throw new FollowerSelfFollowException(
+                    "User " + request.followerId() + " cannot follow themselves"
+            );
+        }
+
         Optional<Follower> existingFollower = followerRepository.findByFollowerIdAndFollowingId(
                 request.followerId(),
                 request.followingId()
@@ -44,13 +51,15 @@ public class FollowerServiceImpl implements FollowerService {
         User followerUser = userRepository.findById(request.followerId())
                 .orElseThrow(() ->
                         new UserNotFoundException(
-                                "User with " + request.followingId() + " not found"
+                                "User with " + request.followerId() + " not found"
                         )
                 );
+
         Follower follower = new Follower(followerUser,followingUser);
         Follower savedFollower = followerRepository.save(follower);
         return new FollowerResponse(savedFollower.getFollower().getId(), savedFollower.getFollowing().getId());
     }
+
 
     @Override
     public void removeFollower(CreateFollowerRequest  request) {
