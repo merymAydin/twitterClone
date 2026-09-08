@@ -4,7 +4,10 @@ package com.example.twitter_challenge.controller;
 import com.example.twitter_challenge.Entity.Tweet;
 import com.example.twitter_challenge.Service.interfaces.TweetService;
 import com.example.twitter_challenge.dto.request.CreateTweetRequest;
+import com.example.twitter_challenge.dto.request.UpdateTweetRequest;
 import com.example.twitter_challenge.dto.response.TweetResponse;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,12 +21,13 @@ public class TweetController {
     }
 
     @PostMapping
-    public TweetResponse createTweet(@RequestBody CreateTweetRequest request) {
+    public TweetResponse createTweet(@Valid @RequestBody CreateTweetRequest request) {
         return tweetService.createTweet(request);
     }
     @DeleteMapping("/{id}")
-    public void deleteTweet(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteTweet(@PathVariable Long id) {
          tweetService.removeTweet(id);
+         return  ResponseEntity.noContent().build();
     }
     @GetMapping
     public List<TweetResponse> findAllTweets() {
@@ -32,5 +36,10 @@ public class TweetController {
     @GetMapping("/{id}")
     public TweetResponse findTweetById(@PathVariable Long id) {
         return tweetService.findTweetById(id);
+    }
+
+    @PutMapping("/{id}")
+    public TweetResponse updateTweet(@PathVariable Long id,@Valid @RequestBody UpdateTweetRequest request) {
+        return tweetService.update(id, request);
     }
 }

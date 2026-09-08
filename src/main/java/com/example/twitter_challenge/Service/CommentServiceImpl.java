@@ -8,6 +8,7 @@ import com.example.twitter_challenge.Repository.TweetRepository;
 import com.example.twitter_challenge.Repository.UserRepository;
 import com.example.twitter_challenge.Service.interfaces.CommentService;
 import com.example.twitter_challenge.dto.request.CreateCommentRequest;
+import com.example.twitter_challenge.dto.request.UpdateCommentRequest;
 import com.example.twitter_challenge.dto.response.CommentResponse;
 import com.example.twitter_challenge.exception.CommentNotFound;
 import com.example.twitter_challenge.exception.TweetNotFoundException;
@@ -61,6 +62,14 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public CommentResponse findCommentById(Long id) {
         Comment comment = commentRepository.findById(id).orElseThrow(()-> new CommentNotFound("Comment " + id + "Not Found"));
+        return new CommentResponse(comment.getUser().getId(),comment.getTweet().getId(),comment.getContent());
+    }
+
+    @Override
+    public CommentResponse update(Long twitterId, UpdateCommentRequest request) {
+        Comment comment = commentRepository.findById(twitterId).orElseThrow(()-> new CommentNotFound("Comment " + twitterId + "Not Found"));
+        comment.setContent(request.content());
+        commentRepository.save(comment);
         return new CommentResponse(comment.getUser().getId(),comment.getTweet().getId(),comment.getContent());
     }
 }

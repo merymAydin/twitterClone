@@ -1,4 +1,7 @@
 package com.example.twitter_challenge.dto.request;
 
-public record CreateCommentRequest (Long userId, Long tweetId, String content) {
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
+public record CreateCommentRequest (@NotNull Long userId, @NotNull Long tweetId,@NotBlank String content) {
 }

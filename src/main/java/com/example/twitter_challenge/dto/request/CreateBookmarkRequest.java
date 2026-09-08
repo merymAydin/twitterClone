@@ -1,4 +1,6 @@
 package com.example.twitter_challenge.dto.request;
 
-public record CreateBookmarkRequest(Long userId, Long tweetId) {
+import jakarta.validation.constraints.NotNull;
+
+public record CreateBookmarkRequest(@NotNull Long userId, @NotNull Long tweetId) {
 }

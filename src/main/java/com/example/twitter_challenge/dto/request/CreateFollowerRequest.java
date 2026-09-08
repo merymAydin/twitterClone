@@ -1,6 +1,8 @@
 package com.example.twitter_challenge.dto.request;
 
 
-public record CreateFollowerRequest(Long followerId, Long followingId){
+import jakarta.validation.constraints.NotNull;
+
+public record CreateFollowerRequest(@NotNull Long followerId, @NotNull Long followingId){
 
 }

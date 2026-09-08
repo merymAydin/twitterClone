@@ -15,6 +15,7 @@ import com.example.twitter_challenge.exception.TweetNotFoundException;
 import com.example.twitter_challenge.exception.UserNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -60,6 +61,23 @@ public class LikeServiceImpl implements LikeService {
         );
          likesRepository.delete(like);
 
+    }
+
+    @Override
+    public LikeResponse findById(Long id) {
+        Likes likes = likesRepository.findById(id).orElseThrow(() -> new LikeNotFoundException("Like with " + id + " not found"));
+        return new LikeResponse(likes.getUser().getId(), likes.getTweet().getId());
+    }
+
+    @Override
+    public List<LikeResponse> findAll() {
+        return likesRepository.findAll()
+                .stream()
+                .map(likes -> new LikeResponse(
+                        likes.getUser().getId(),
+                        likes.getTweet().getId()
+                ))
+                .toList();
     }
 
 }

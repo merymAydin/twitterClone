@@ -10,4 +10,5 @@ import java.util.Optional;
 
 public interface CommentRepository extends JpaRepository<Comment,Long> {
 
+    Long id(Long id);
 }

@@ -41,4 +41,7 @@ public class Tweet extends EntityBase{
     @OneToMany(mappedBy = "tweet")
     private List<Likes> likes;
 
+    @OneToOne(mappedBy = "tweet")
+    private Statistics statistics;
+
 }

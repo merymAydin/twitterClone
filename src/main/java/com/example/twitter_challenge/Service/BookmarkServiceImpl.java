@@ -65,12 +65,14 @@ public class BookmarkServiceImpl implements BookmarkService {
                 .toList();
     }
 
-
     @Override
     public BookmarkResponse findBookmarkById(Long id) {
-        Bookmark bookmark = bookmarkRepository.findById(id).orElseThrow(()-> new BookmarkNotFoundException("Bookmark with" + id + " not found"));
-        return new BookmarkResponse(bookmark.getUser().getId(), bookmark.getTweet().getId());
+        Bookmark bookmark = bookmarkRepository.findById(id).orElseThrow(()-> new BookmarkNotFoundException("Bookmark with tweet id" + id + " not found"));
+        return new  BookmarkResponse(bookmark.getUser().getId(), bookmark.getTweet().getId());
     }
+
+
+
 }
 
 

@@ -6,6 +6,7 @@ import com.example.twitter_challenge.Repository.TweetRepository;
 import com.example.twitter_challenge.Repository.UserRepository;
 import com.example.twitter_challenge.Service.interfaces.TweetService;
 import com.example.twitter_challenge.dto.request.CreateTweetRequest;
+import com.example.twitter_challenge.dto.request.UpdateTweetRequest;
 import com.example.twitter_challenge.dto.response.TweetResponse;
 import com.example.twitter_challenge.exception.TweetNotFoundException;
 import com.example.twitter_challenge.exception.UserNotFoundException;
@@ -71,6 +72,14 @@ public class TweetServiceImpl implements TweetService {
     public TweetResponse findTweetById(Long id) {
         Tweet tweet = tweetRepository.findById(id).orElseThrow(()->new TweetNotFoundException("Tweet with " + id + " not found"));
         return new TweetResponse(tweet.getContent(),tweet.getUser().getId(),tweet.getLocation(),tweet.getParent() != null ? tweet.getParent().getId() : null);
+    }
+
+    @Override
+    public TweetResponse update(Long id, UpdateTweetRequest request) {
+        Tweet tweet = tweetRepository.findById(id).orElseThrow(()->new TweetNotFoundException("Tweet with " + id + " not found"));
+        tweet.setContent(request.content());
+        tweetRepository.save(tweet);
+        return new TweetResponse(tweet.getContent(), tweet.getId(),  tweet.getLocation(), tweet.getParent() != null ? tweet.getParent().getId() : null);
     }
 
 }

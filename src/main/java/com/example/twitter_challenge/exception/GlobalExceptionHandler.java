@@ -1,46 +1,87 @@
 package com.example.twitter_challenge.exception;
 
+import com.example.twitter_challenge.dto.response.ErrorResponse;
 import org.springframework.http.HttpStatus;
+
 import org.springframework.http.ResponseEntity;
+
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.Date;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<?> handleUserNotFound(UserNotFoundException exception) {
-        return new ResponseEntity<>(exception.getMessage(), HttpStatus.NOT_FOUND);
+    public ResponseEntity<ErrorResponse> handleUserNotFound(UserNotFoundException exception) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.NOT_FOUND,
+                exception.getMessage(),
+                new Date()
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+
     }
     @ExceptionHandler(TweetNotFoundException.class)
-    public ResponseEntity<?> handleTweetNotFound(TweetNotFoundException exception) {
-        return new ResponseEntity<>(exception.getMessage(), HttpStatus.NOT_FOUND);
+    public ResponseEntity<ErrorResponse> handleTweetNotFound(TweetNotFoundException exception) {
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.NOT_FOUND,exception.getMessage(),new Date());
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
     @ExceptionHandler(LikeAlreadyExistsException.class)
-    public ResponseEntity<?> handleLikeFound(LikeAlreadyExistsException exception) {
-        return new ResponseEntity<>(exception.getMessage(), HttpStatus.CONFLICT);
+    public ResponseEntity<ErrorResponse> handleLikeAlreadyExists(LikeAlreadyExistsException  exception) {
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.CONFLICT,exception.getMessage(),new Date());
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
     @ExceptionHandler(BookmarkAlreadyExistsException.class)
-    public ResponseEntity<?> handleLikeFound(BookmarkAlreadyExistsException exception) {
-        return new ResponseEntity<>(exception.getMessage(), HttpStatus.CONFLICT);
+    public ResponseEntity<ErrorResponse> handleBookmarkAlreadyExists(BookmarkAlreadyExistsException exception) {
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.CONFLICT,exception.getMessage(),new Date());
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
     @ExceptionHandler(FollowerAlreadyExistsException.class)
-    public ResponseEntity<?> handleFollowerFound(FollowerAlreadyExistsException exception) {
-        return new ResponseEntity<>(exception.getMessage(), HttpStatus.CONFLICT);
+    public ResponseEntity<ErrorResponse> handleFollowerAlreadyExists(FollowerAlreadyExistsException exception) {
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.CONFLICT,exception.getMessage(),new Date());
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
     @ExceptionHandler(LikeNotFoundException.class)
-    public ResponseEntity<?> handleLikeNotFound(LikeNotFoundException exception) {
-        return new ResponseEntity<>(exception.getMessage(), HttpStatus.NOT_FOUND);
+    public ResponseEntity<ErrorResponse> handleLikeNotFound(LikeNotFoundException exception) {
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.NOT_FOUND,exception.getMessage(),new Date());
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
     @ExceptionHandler(BookmarkNotFoundException.class)
-    public ResponseEntity<?> handleBookmarkNotFound(BookmarkNotFoundException exception) {
-        return new ResponseEntity<>(exception.getMessage(), HttpStatus.NOT_FOUND);
+    public ResponseEntity<ErrorResponse> handleBookmarkNotFound(BookmarkNotFoundException exception) {
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.NOT_FOUND,exception.getMessage(),new Date());
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
     @ExceptionHandler(FollowerNotFoundException.class)
-    public ResponseEntity<?> handleFollowerNotFound(FollowerNotFoundException exception) {
-        return new ResponseEntity<>(exception.getMessage(), HttpStatus.NOT_FOUND);
+    public ResponseEntity<ErrorResponse> handleFollowerNotFound(FollowerNotFoundException exception) {
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.NOT_FOUND,exception.getMessage(),new Date());
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
     @ExceptionHandler(CommentNotFound.class)
-    public ResponseEntity<?> handleCommentNotFound(CommentNotFound exception) {
-        return new ResponseEntity<>(exception.getMessage(), HttpStatus.NOT_FOUND);
+    public ResponseEntity<ErrorResponse> handleCommentNotFound(CommentNotFound exception) {
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.NOT_FOUND,exception.getMessage(),new Date());
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+
+    }
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidationErrors(
+            MethodArgumentNotValidException exception) {
+        FieldError fieldError = exception.getBindingResult()
+                .getFieldErrors()
+                .get(0);
+        String message = fieldError.getField()
+                + ": "
+                + fieldError.getDefaultMessage();
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                message,
+                new Date()
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 }

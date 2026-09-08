@@ -3,6 +3,8 @@ package com.example.twitter_challenge.controller;
 import com.example.twitter_challenge.Service.interfaces.BookmarkService;
 import com.example.twitter_challenge.dto.request.CreateBookmarkRequest;
 import com.example.twitter_challenge.dto.response.BookmarkResponse;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,19 +18,20 @@ public class BookmarkController {
     }
 
     @PostMapping
-    public BookmarkResponse createBookMark(@RequestBody CreateBookmarkRequest request){
+    public BookmarkResponse createBookMark(@Valid @RequestBody CreateBookmarkRequest request){
         return bookmarkService.createBookmark(request);
     }
     @DeleteMapping
-    public void deleteBookmark(@RequestBody CreateBookmarkRequest request){
+    public ResponseEntity<Void> deleteBookmark(@Valid @RequestBody CreateBookmarkRequest request){
         bookmarkService.removeBookmark(request);
+        return ResponseEntity.noContent().build();
     }
     @GetMapping
-    public List<BookmarkResponse> findAllBookmarks(){
+    public List<BookmarkResponse> getAllBookmarks(){
         return bookmarkService.findAllBookmarks();
     }
     @GetMapping("/{id}")
-    public BookmarkResponse findBookmarkById(@PathVariable Long id){
+    public BookmarkResponse getBookmarkById(@PathVariable Long id){
         return bookmarkService.findBookmarkById(id);
     }
 }

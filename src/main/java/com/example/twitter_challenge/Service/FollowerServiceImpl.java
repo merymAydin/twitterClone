@@ -81,7 +81,7 @@ public class FollowerServiceImpl implements FollowerService {
 
     @Override
     public FollowerResponse findFollowerById(Long id) {
-        Follower follower = followerRepository.findByFollowerIdAndFollowingId(id, id).orElseThrow(()->new FollowerNotFoundException("Follower Not Found"));
+        Follower follower = followerRepository.findById(id).orElseThrow(()->new FollowerNotFoundException("Follower Not Found"));
         return new FollowerResponse(follower.getFollower().getId(), follower.getFollowing().getId());
     }
 
