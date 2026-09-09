@@ -6,6 +6,7 @@ import com.example.twitter_challenge.dto.request.UpdateUserRequest;
 import com.example.twitter_challenge.dto.response.UserResponse;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface UserService {
     UserResponse findById(Long id);
@@ -13,5 +14,6 @@ public interface UserService {
     void removeUser(Long id);
     List<UserResponse> findAll();
     UserResponse update(Long id, UpdateUserRequest request);
+    UserResponse findByUserName(String username);
 
 }

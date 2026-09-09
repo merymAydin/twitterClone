@@ -8,6 +8,7 @@ import com.example.twitter_challenge.dto.request.UpdateUserRequest;
 import com.example.twitter_challenge.dto.response.UserResponse;
 import com.example.twitter_challenge.exception.UserNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,9 +16,11 @@ import java.util.List;
 @Service
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
     @Autowired
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
     @Override
     public UserResponse findById(Long id) {
@@ -33,6 +36,7 @@ public class UserServiceImpl implements UserService {
         User user = new User();
         user.setUserName(request.username());
         user.setEmail(request.email());
+        user.setPassword(passwordEncoder.encode(request.password()));
         user.setBirthday(request.birthday());
         user.setLocation(request.location());
         user.setBio(request.bio());
@@ -81,4 +85,12 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
         return new UserResponse (user.getId(), user.getUserName(), user.getEmail(),  user.getBirthday(),user.getLocation(), user.getBio(), user.getPhoto(), user.getBanner());
     }
+
+    @Override
+    public UserResponse findByUserName(String username) {
+        User user = userRepository.findByUserName(username).orElseThrow(()->new UserNotFoundException("User with " + username + " not found"));
+        return new UserResponse (user.getId(), user.getUserName(), user.getEmail(),  user.getBirthday(),user.getLocation(), user.getBio(), user.getPhoto(), user.getBanner());
+    }
+
+
 }
