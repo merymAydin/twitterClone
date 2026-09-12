@@ -12,10 +12,9 @@ import com.example.twitter_challenge.Service.interfaces.CommentService;
 import com.example.twitter_challenge.dto.request.CreateCommentRequest;
 import com.example.twitter_challenge.dto.request.UpdateCommentRequest;
 import com.example.twitter_challenge.dto.response.CommentResponse;
-import com.example.twitter_challenge.exception.CommentNotFound;
-import com.example.twitter_challenge.exception.StatisticsNotFoundException;
-import com.example.twitter_challenge.exception.TweetNotFoundException;
-import com.example.twitter_challenge.exception.UserNotFoundException;
+import com.example.twitter_challenge.exception.*;
+import jakarta.transaction.Transactional;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -50,9 +49,14 @@ public class CommentServiceImpl implements CommentService {
 
     }
 
+    @Transactional
     @Override
     public void removeComment(Long id) {
-        Comment comment = commentRepository.findById(id).orElseThrow(()-> new TweetNotFoundException("Tweet with" + id + "not found"));
+        Comment comment = commentRepository.findById(id).orElseThrow(()-> new CommentNotFound("Comment with" + id + "not found"));
+        String currUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        if(!currUsername.equals(comment.getUser().getUserName())){
+            throw new ForbiddenException("You are not allowed to remove this comment");
+        }
         Statistics statistics = statisticsRepository.findByTweetId(comment.getTweet().getId()).orElseThrow(()->new StatisticsNotFoundException("Statistics for tweet " + comment.getTweet().getId() + " not found"));
         statistics.setComments(statistics.getComments()-1);
         statisticsRepository.save(statistics);

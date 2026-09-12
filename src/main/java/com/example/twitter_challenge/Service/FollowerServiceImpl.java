@@ -8,10 +8,9 @@ import com.example.twitter_challenge.Service.interfaces.FollowerService;
 import com.example.twitter_challenge.dto.request.CreateFollowerRequest;
 import com.example.twitter_challenge.dto.response.BookmarkResponse;
 import com.example.twitter_challenge.dto.response.FollowerResponse;
-import com.example.twitter_challenge.exception.FollowerAlreadyExistsException;
-import com.example.twitter_challenge.exception.FollowerNotFoundException;
-import com.example.twitter_challenge.exception.FollowerSelfFollowException;
-import com.example.twitter_challenge.exception.UserNotFoundException;
+import com.example.twitter_challenge.exception.*;
+import jakarta.transaction.Transactional;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -61,6 +60,7 @@ public class FollowerServiceImpl implements FollowerService {
     }
 
 
+    @Transactional
     @Override
     public void removeFollower(CreateFollowerRequest  request) {
         Follower follower = followerRepository.findByFollowerIdAndFollowingId(request.followerId(),request.followingId()).orElseThrow(
@@ -72,6 +72,10 @@ public class FollowerServiceImpl implements FollowerService {
                                 + " not found"
                 )
         );
+        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (!currentUsername.equals(follower.getFollower().getUserName())){
+            throw new ForbiddenException("You are not allowed to remove this follower");
+        }
         followerRepository.delete(follower);
     }
 

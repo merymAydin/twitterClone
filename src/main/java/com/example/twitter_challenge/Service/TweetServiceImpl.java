@@ -10,10 +10,15 @@ import com.example.twitter_challenge.Service.interfaces.TweetService;
 import com.example.twitter_challenge.dto.request.CreateTweetRequest;
 import com.example.twitter_challenge.dto.request.UpdateTweetRequest;
 import com.example.twitter_challenge.dto.response.TweetResponse;
+import com.example.twitter_challenge.exception.ForbiddenException;
+import com.example.twitter_challenge.exception.StatisticsNotFoundException;
 import com.example.twitter_challenge.exception.TweetNotFoundException;
 import com.example.twitter_challenge.exception.UserNotFoundException;
+import jakarta.transaction.Transactional;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import javax.naming.AuthenticationException;
 import java.util.List;
 
 @Service
@@ -61,9 +66,16 @@ public class TweetServiceImpl implements TweetService {
                 savedTweet.getParent() != null ? savedTweet.getParent().getId() : null);
     }
 
+    @Transactional
     @Override
     public void removeTweet(Long id) {
         Tweet tweet = tweetRepository.findById(id).orElseThrow(()->new TweetNotFoundException("Tweet with " + id + " not found"));
+        String currentUserName = SecurityContextHolder.getContext().getAuthentication().getName();
+        if(!currentUserName.equals(tweet.getUser().getUserName())){
+            throw new  ForbiddenException("You are not allowed to remove this tweet");
+        }
+        Statistics statistics = tweet.getStatistics();
+        statisticsRepository.delete(statistics);
         tweetRepository.delete(tweet);
     }
 

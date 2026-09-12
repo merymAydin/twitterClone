@@ -12,6 +12,8 @@ import com.example.twitter_challenge.Service.interfaces.LikeService;
 import com.example.twitter_challenge.dto.request.CreateLikeRequest;
 import com.example.twitter_challenge.dto.response.LikeResponse;
 import com.example.twitter_challenge.exception.*;
+import jakarta.transaction.Transactional;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -64,17 +66,21 @@ public class LikeServiceImpl implements LikeService {
         return new LikeResponse(savedLike.getUser().getId(), savedLike.getTweet().getId());
 
     }
-
+    @Transactional
     @Override
     public void removeLike(CreateLikeRequest request) {
          Likes like = likesRepository.findByTweetIdAndUserId(request.tweetId(), request.userId() ).orElseThrow(() ->
                 new LikeNotFoundException("Like for tweet " + request.tweetId() + " not found")
         );
+         String curUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+         if(!curUsername.equals(like.getUser().getUserName())){
+             throw new  ForbiddenException("You are not allowed to remove this like");
+         }
         Statistics statistics =statisticsRepository.findByTweetId(like.getTweet().getId()).orElseThrow(() ->new StatisticsNotFoundException("Statistics for tweet " + like.getTweet().getId() + " not found"));
-        likesRepository.delete(like);
+
         statistics.setLikes(statistics.getLikes() - 1);
         statisticsRepository.save(statistics);
-
+        likesRepository.delete(like);
 
     }
 

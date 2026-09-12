@@ -13,6 +13,8 @@ import com.example.twitter_challenge.dto.request.CreateBookmarkRequest;
 import com.example.twitter_challenge.dto.response.BookmarkResponse;
 import com.example.twitter_challenge.dto.response.TweetResponse;
 import com.example.twitter_challenge.exception.*;
+import jakarta.transaction.Transactional;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -52,10 +54,15 @@ public class BookmarkServiceImpl implements BookmarkService {
         return new BookmarkResponse(savedBookmark.getUser().getId(), savedBookmark.getTweet().getId());
     }
 
+    @Transactional
     @Override
     public void removeBookmark(CreateBookmarkRequest request) {
         Bookmark bookmark = bookmarkRepository.findByTweetIdAndUserId(request.tweetId(), request.userId()).orElseThrow(()->
                 new BookmarkNotFoundException("Bookmark with" + request.tweetId() + " not found"));
+        String curUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        if(!curUsername.equals(bookmark.getUser().getUserName())){
+            throw new  ForbiddenException("You are not allowed to remove this bookmark");
+        }
         Statistics statistics = statisticsRepository.findByTweetId(bookmark.getTweet().getId()).orElseThrow(()->new StatisticsNotFoundException("Statistics for tweet " + bookmark.getTweet().getId() + " not found"));
         statistics.setBookmarks(statistics.getBookmarks() - 1);
         statisticsRepository.save(statistics);
