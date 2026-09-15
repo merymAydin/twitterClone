@@ -33,6 +33,7 @@ public class LikeServiceImpl implements LikeService {
         this.statisticsRepository = statisticsRepository;
     }
 
+    @Transactional
     @Override
     public LikeResponse createLike(CreateLikeRequest request) {
         Optional<Likes> existingLike =
@@ -45,11 +46,16 @@ public class LikeServiceImpl implements LikeService {
                     "User " + request.userId() + " has already liked tweet " + request.tweetId()
             );
         }
+
         Tweet tweet = tweetRepository.findById(request.tweetId()).orElseThrow(() -> new TweetNotFoundException("Tweet with" + request.tweetId() + "not found"));
         User user = userRepository.findById(request.userId())
                 .orElseThrow(() ->
                         new UserNotFoundException("User with " + request.userId() + " not found")
                 );
+        String curName = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (!curName.equals(user.getUserName())){
+            throw new ForbiddenException("you are not allowed to like this tweet");
+        }
 
         Likes likes = new Likes(tweet, user);
 

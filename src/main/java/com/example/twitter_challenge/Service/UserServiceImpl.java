@@ -6,8 +6,10 @@ import com.example.twitter_challenge.Service.interfaces.UserService;
 import com.example.twitter_challenge.dto.request.CreateUserRequest;
 import com.example.twitter_challenge.dto.request.UpdateUserRequest;
 import com.example.twitter_challenge.dto.response.UserResponse;
+import com.example.twitter_challenge.exception.ForbiddenException;
 import com.example.twitter_challenge.exception.UserNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -51,6 +53,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public void removeUser(Long id) {
         User user = userRepository.findById(id).orElseThrow(()->new UserNotFoundException("User with" + id +"not found"));
+        String curName = SecurityContextHolder.getContext().getAuthentication().getName();
+        if(!curName.equals(user.getUserName())){
+            throw new ForbiddenException("You are not allowed to remove this user");
+        }
         user.setIsDeleted(true);
         userRepository.save(user);
     }
@@ -75,6 +81,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse  update(Long id, UpdateUserRequest request) {
         User user = userRepository.findById(id).orElseThrow(()->new UserNotFoundException("User with " + id + " not found"));
+        String curName = SecurityContextHolder.getContext().getAuthentication().getName();
+        if(!curName.equals(user.getUserName())){
+            throw new ForbiddenException("You are not allowed to update this user");
+        }
         user.setUserName(request.username());
         user.setEmail(request.email());
         user.setBirthday(request.birthday());

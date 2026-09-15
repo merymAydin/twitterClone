@@ -28,5 +28,10 @@ public class CustomUserDetails implements UserDetails {
     public String getUsername() {
         return user.getUserName();
     }
+
+    public boolean isEnabled(){
+        return !user.getIsDeleted();
+    }
+
 }
 

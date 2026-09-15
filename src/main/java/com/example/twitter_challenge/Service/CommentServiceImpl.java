@@ -32,6 +32,7 @@ public class CommentServiceImpl implements CommentService {
         this.tweetRepository = tweetRepository;
         this.statisticsRepository = statisticsRepository;
     }
+    @Transactional
     @Override
     public CommentResponse createComment(CreateCommentRequest request) {
 
@@ -39,6 +40,10 @@ public class CommentServiceImpl implements CommentService {
                 .orElseThrow(() ->
                         new UserNotFoundException("User with " + request.userId() + " not found")
                 );
+        String curName = SecurityContextHolder.getContext().getAuthentication().getName();
+        if(!curName.equals(user.getUserName())){
+            throw new ForbiddenException("You are not allowed to create this comment");
+        }
         Tweet tweet = tweetRepository.findById(request.tweetId()).orElseThrow(()-> new TweetNotFoundException("Tweet with" + request.tweetId()+ "not found"));
         Comment comment = new Comment(tweet,user,request.content());
         Comment savedComment = commentRepository.save(comment);
@@ -83,8 +88,12 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public CommentResponse update(Long twitterId, UpdateCommentRequest request) {
-        Comment comment = commentRepository.findById(twitterId).orElseThrow(()-> new CommentNotFound("Comment " + twitterId + "Not Found"));
+    public CommentResponse update(Long commentId, UpdateCommentRequest request) {
+        Comment comment = commentRepository.findById(commentId).orElseThrow(()-> new CommentNotFound("Comment " + commentId + "Not Found"));
+        String curName = SecurityContextHolder.getContext().getAuthentication().getName();
+        if(!curName.equals(comment.getUser().getUserName())){
+            throw new ForbiddenException("You are not allowed to update this comment");
+        }
         comment.setContent(request.content());
         commentRepository.save(comment);
         return new CommentResponse(comment.getId(),comment.getUser().getId(),comment.getTweet().getId(),comment.getContent());

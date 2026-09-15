@@ -26,6 +26,7 @@ public class FollowerServiceImpl implements FollowerService {
         this.userRepository = userRepository;
     }
 
+    @Transactional
     @Override
     public FollowerResponse createFollower(CreateFollowerRequest request) {
         if (request.followerId().equals(request.followingId())) {
@@ -53,6 +54,10 @@ public class FollowerServiceImpl implements FollowerService {
                                 "User with " + request.followerId() + " not found"
                         )
                 );
+        String curName = SecurityContextHolder.getContext().getAuthentication().getName();
+        if(!curName.equals(followerUser.getUserName())){
+            throw new ForbiddenException("You are not allowed to follow this user");
+        }
 
         Follower follower = new Follower(followerUser,followingUser);
         Follower savedFollower = followerRepository.save(follower);

@@ -38,6 +38,10 @@ public class TweetServiceImpl implements TweetService {
                 .orElseThrow(() ->
                         new UserNotFoundException("User with " + request.userId() + " not found")
                 );
+        String curName = SecurityContextHolder.getContext().getAuthentication().getName();
+        if(!curName.equals(user.getUserName())){
+            throw new ForbiddenException("You are not allowed to create this tweet");
+        }
 
         Tweet parentTweet =null;
         if (request.parentId() != null) {
@@ -48,6 +52,7 @@ public class TweetServiceImpl implements TweetService {
                             )
                     );
         }
+
         Tweet tweet = new Tweet();
         tweet.setContent(request.content());
         tweet.setUser(user);
@@ -101,6 +106,10 @@ public class TweetServiceImpl implements TweetService {
     @Override
     public TweetResponse update(Long id, UpdateTweetRequest request) {
         Tweet tweet = tweetRepository.findById(id).orElseThrow(()->new TweetNotFoundException("Tweet with " + id + " not found"));
+        String currentUserName = SecurityContextHolder.getContext().getAuthentication().getName();
+        if(!currentUserName.equals(tweet.getUser().getUserName())){
+            throw new  ForbiddenException("You are not allowed to update this tweet");
+        }
         tweet.setContent(request.content());
         tweetRepository.save(tweet);
         return new TweetResponse(tweet.getContent(), tweet.getId(),  tweet.getLocation(), tweet.getParent() != null ? tweet.getParent().getId() : null);

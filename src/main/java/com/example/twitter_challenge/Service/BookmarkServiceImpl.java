@@ -33,6 +33,8 @@ public class BookmarkServiceImpl implements BookmarkService {
         this.tweetRepository = tweetRepository;
         this.statisticsRepository = statisticsRepository;
     }
+
+    @Transactional
     @Override
     public BookmarkResponse createBookmark(CreateBookmarkRequest request) {
         Optional<Bookmark> existingBookmark = bookmarkRepository.findByTweetIdAndUserId(request.tweetId(), request.userId());
@@ -46,6 +48,10 @@ public class BookmarkServiceImpl implements BookmarkService {
                 .orElseThrow(() ->
                         new UserNotFoundException("User with " + request.userId() + " not found")
                 );
+        String curName = SecurityContextHolder.getContext().getAuthentication().getName();
+        if(!curName.equals(user.getUserName())){
+            throw new ForbiddenException("You are not allowed to bookmark");
+        }
         Bookmark bookmark = new Bookmark(user,tweet);
         Bookmark savedBookmark = bookmarkRepository.save(bookmark);
         Statistics statistics = statisticsRepository.findByTweetId(savedBookmark.getTweet().getId()).orElseThrow(()->new RuntimeException("Statistics for tweet " + savedBookmark.getTweet().getId() + " not found"));
