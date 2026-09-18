@@ -1,14 +1,12 @@
 package com.example.twitter_challenge.Service;
 
-import com.example.twitter_challenge.Entity.Likes;
-import com.example.twitter_challenge.Entity.Statistics;
-import com.example.twitter_challenge.Entity.Tweet;
-import com.example.twitter_challenge.Entity.User;
+import com.example.twitter_challenge.Entity.*;
 import com.example.twitter_challenge.Repository.LikesRepository;
 import com.example.twitter_challenge.Repository.StatisticsRepository;
 import com.example.twitter_challenge.Repository.TweetRepository;
 import com.example.twitter_challenge.Repository.UserRepository;
 import com.example.twitter_challenge.Service.interfaces.LikeService;
+import com.example.twitter_challenge.Service.interfaces.NotificationService;
 import com.example.twitter_challenge.dto.request.CreateLikeRequest;
 import com.example.twitter_challenge.dto.response.LikeResponse;
 import com.example.twitter_challenge.exception.*;
@@ -25,12 +23,14 @@ public class LikeServiceImpl implements LikeService {
     private final UserRepository userRepository;
     private final TweetRepository tweetRepository;
     private final StatisticsRepository statisticsRepository;
+    private final NotificationService notificationService;
 
-    public LikeServiceImpl(LikesRepository likesRepository, UserRepository userRepository, TweetRepository tweetRepository, StatisticsRepository statisticsRepository) {
+    public LikeServiceImpl(LikesRepository likesRepository, UserRepository userRepository, TweetRepository tweetRepository, StatisticsRepository statisticsRepository, NotificationService notificationService) {
         this.likesRepository = likesRepository;
         this.userRepository = userRepository;
         this.tweetRepository = tweetRepository;
         this.statisticsRepository = statisticsRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -68,18 +68,24 @@ public class LikeServiceImpl implements LikeService {
                 ));
         statistics.setLikes(statistics.getLikes() + 1);
         statisticsRepository.save(statistics);
+        notificationService.create(savedLike.getUser().getId(),savedLike.getTweet().getUser().getId(), NotificationType.LIKE,"Liked your tweet");
 
         return new LikeResponse(savedLike.getUser().getId(), savedLike.getTweet().getId());
 
     }
     @Transactional
     @Override
-    public void removeLike(CreateLikeRequest request) {
-         Likes like = likesRepository.findByTweetIdAndUserId(request.tweetId(), request.userId() ).orElseThrow(() ->
-                new LikeNotFoundException("Like for tweet " + request.tweetId() + " not found")
+    public void removeLike(CreateLikeRequest request,Long userId) {
+        Likes like = likesRepository.findByTweetIdAndUserId(
+                request.tweetId(),
+                userId
+        ).orElseThrow(() ->
+                new LikeNotFoundException(
+                        "Like for tweet " + request.tweetId() + " not found"
+                )
         );
-         String curUsername = SecurityContextHolder.getContext().getAuthentication().getName();
-         if(!curUsername.equals(like.getUser().getUserName())){
+
+         if(!like.getUser().getId().equals(userId)){
              throw new  ForbiddenException("You are not allowed to remove this like");
          }
         Statistics statistics =statisticsRepository.findByTweetId(like.getTweet().getId()).orElseThrow(() ->new StatisticsNotFoundException("Statistics for tweet " + like.getTweet().getId() + " not found"));

@@ -1,14 +1,12 @@
 package com.example.twitter_challenge.Service;
 
-import com.example.twitter_challenge.Entity.Comment;
-import com.example.twitter_challenge.Entity.Statistics;
-import com.example.twitter_challenge.Entity.Tweet;
-import com.example.twitter_challenge.Entity.User;
+import com.example.twitter_challenge.Entity.*;
 import com.example.twitter_challenge.Repository.CommentRepository;
 import com.example.twitter_challenge.Repository.StatisticsRepository;
 import com.example.twitter_challenge.Repository.TweetRepository;
 import com.example.twitter_challenge.Repository.UserRepository;
 import com.example.twitter_challenge.Service.interfaces.CommentService;
+import com.example.twitter_challenge.Service.interfaces.NotificationService;
 import com.example.twitter_challenge.dto.request.CreateCommentRequest;
 import com.example.twitter_challenge.dto.request.UpdateCommentRequest;
 import com.example.twitter_challenge.dto.response.CommentResponse;
@@ -25,12 +23,14 @@ public class CommentServiceImpl implements CommentService {
     private final UserRepository userRepository;
     private final TweetRepository tweetRepository;
     private final StatisticsRepository statisticsRepository;
+    private final NotificationService notificationService;
 
-    public  CommentServiceImpl(CommentRepository commentRepository, UserRepository userRepository, TweetRepository tweetRepository, StatisticsRepository statisticsRepository) {
+    public  CommentServiceImpl(CommentRepository commentRepository, UserRepository userRepository, TweetRepository tweetRepository, StatisticsRepository statisticsRepository, NotificationService notificationService) {
         this.commentRepository = commentRepository;
         this.userRepository = userRepository;
         this.tweetRepository = tweetRepository;
         this.statisticsRepository = statisticsRepository;
+        this.notificationService = notificationService;
     }
     @Transactional
     @Override
@@ -50,16 +50,16 @@ public class CommentServiceImpl implements CommentService {
         Statistics statistics = statisticsRepository.findByTweetId(savedComment.getTweet().getId()).orElseThrow(()->new StatisticsNotFoundException("Statistics for tweet " + savedComment.getTweet().getId() + " not found"));
         statistics.setComments(statistics.getComments() + 1);
         statisticsRepository.save(statistics);
-        return new CommentResponse(savedComment.getId(), savedComment.getUser().getId(),savedComment.getTweet().getId(),savedComment.getContent());
+        notificationService.create(savedComment.getUser().getId(),savedComment.getId(), NotificationType.COMMENT,"Commented on your post");
+        return new CommentResponse(savedComment.getId(), savedComment.getTweet().getUser().getId(),savedComment.getTweet().getId(),savedComment.getContent());
 
     }
 
     @Transactional
     @Override
-    public void removeComment(Long id) {
+    public void removeComment(Long id,Long userId) {
         Comment comment = commentRepository.findById(id).orElseThrow(()-> new CommentNotFound("Comment with" + id + "not found"));
-        String currUsername = SecurityContextHolder.getContext().getAuthentication().getName();
-        if(!currUsername.equals(comment.getUser().getUserName())){
+        if(!comment.getUser().getId().equals(userId)){
             throw new ForbiddenException("You are not allowed to remove this comment");
         }
         Statistics statistics = statisticsRepository.findByTweetId(comment.getTweet().getId()).orElseThrow(()->new StatisticsNotFoundException("Statistics for tweet " + comment.getTweet().getId() + " not found"));
@@ -88,10 +88,10 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public CommentResponse update(Long commentId, UpdateCommentRequest request) {
+    public CommentResponse update(Long commentId, UpdateCommentRequest request,Long userId) {
         Comment comment = commentRepository.findById(commentId).orElseThrow(()-> new CommentNotFound("Comment " + commentId + "Not Found"));
-        String curName = SecurityContextHolder.getContext().getAuthentication().getName();
-        if(!curName.equals(comment.getUser().getUserName())){
+
+        if(!comment.getUser().getId().equals(userId)){
             throw new ForbiddenException("You are not allowed to update this comment");
         }
         comment.setContent(request.content());

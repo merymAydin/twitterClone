@@ -1,13 +1,18 @@
 package com.example.twitter_challenge.Service;
 
 import com.example.twitter_challenge.Entity.Follower;
+import com.example.twitter_challenge.Entity.Notification;
+import com.example.twitter_challenge.Entity.NotificationType;
 import com.example.twitter_challenge.Entity.User;
 import com.example.twitter_challenge.Repository.FollowerRepository;
+import com.example.twitter_challenge.Repository.NotificationRepository;
 import com.example.twitter_challenge.Repository.UserRepository;
 import com.example.twitter_challenge.Service.interfaces.FollowerService;
+import com.example.twitter_challenge.Service.interfaces.NotificationService;
 import com.example.twitter_challenge.dto.request.CreateFollowerRequest;
 import com.example.twitter_challenge.dto.response.BookmarkResponse;
 import com.example.twitter_challenge.dto.response.FollowerResponse;
+import com.example.twitter_challenge.dto.response.NotificationResponse;
 import com.example.twitter_challenge.exception.*;
 import jakarta.transaction.Transactional;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,10 +25,12 @@ import java.util.Optional;
 public class FollowerServiceImpl implements FollowerService {
     private final FollowerRepository followerRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
-    public FollowerServiceImpl(FollowerRepository followerRepository, UserRepository userRepository) {
+    public FollowerServiceImpl(FollowerRepository followerRepository, UserRepository userRepository, NotificationService notificationService) {
         this.followerRepository = followerRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -61,6 +68,10 @@ public class FollowerServiceImpl implements FollowerService {
 
         Follower follower = new Follower(followerUser,followingUser);
         Follower savedFollower = followerRepository.save(follower);
+
+         notificationService.create(savedFollower.getFollower().getId(),savedFollower.getFollowing().getId(), NotificationType.FOLLOW, "started following you");
+
+
         return new FollowerResponse(savedFollower.getFollower().getId(), savedFollower.getFollowing().getId());
     }
 

@@ -5,10 +5,14 @@ import com.example.twitter_challenge.Repository.UserRepository;
 import com.example.twitter_challenge.Service.interfaces.UserService;
 import com.example.twitter_challenge.dto.request.CreateUserRequest;
 import com.example.twitter_challenge.dto.request.UpdateUserRequest;
+import com.example.twitter_challenge.dto.response.TweetResponse;
 import com.example.twitter_challenge.dto.response.UserResponse;
 import com.example.twitter_challenge.exception.ForbiddenException;
 import com.example.twitter_challenge.exception.UserNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -100,6 +104,14 @@ public class UserServiceImpl implements UserService {
     public UserResponse findByUserName(String username) {
         User user = userRepository.findByUserName(username).orElseThrow(()->new UserNotFoundException("User with " + username + " not found"));
         return new UserResponse (user.getId(), user.getUserName(), user.getEmail(),  user.getBirthday(),user.getLocation(), user.getBio(), user.getPhoto(), user.getBanner());
+    }
+
+    @Override
+    public Page<UserResponse> findByUserNameContaining(String userName, Pageable pageable) {
+        Page<User> users = userRepository.findByUserNameContaining(userName, pageable);
+        return users.map(user -> new UserResponse(
+                user.getId(),user.getUserName(),user.getEmail(),user.getBirthday(),user.getLocation(),user.getBio(),user.getPhoto(),user.getBanner()
+        ));
     }
 
 

@@ -7,6 +7,8 @@ import com.example.twitter_challenge.dto.request.CreateUserRequest;
 import com.example.twitter_challenge.dto.request.UpdateUserRequest;
 import com.example.twitter_challenge.dto.response.UserResponse;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,5 +43,10 @@ public class UserController {
     @PutMapping("/{id}")
     public UserResponse updateUser(@PathVariable Long id,@Valid @RequestBody UpdateUserRequest request){
         return userService.update(id, request);
+    }
+
+    @GetMapping("/search")
+    public Page<UserResponse> getByUserNameContaining(@RequestParam String keyword, Pageable pageable) {
+        return userService.findByUserNameContaining(keyword,pageable);
     }
 }

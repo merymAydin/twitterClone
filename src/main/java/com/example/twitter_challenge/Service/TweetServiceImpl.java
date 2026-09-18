@@ -15,11 +15,11 @@ import com.example.twitter_challenge.exception.StatisticsNotFoundException;
 import com.example.twitter_challenge.exception.TweetNotFoundException;
 import com.example.twitter_challenge.exception.UserNotFoundException;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import javax.naming.AuthenticationException;
-import java.util.List;
 
 @Service
 public class TweetServiceImpl implements TweetService {
@@ -71,12 +71,13 @@ public class TweetServiceImpl implements TweetService {
                 savedTweet.getParent() != null ? savedTweet.getParent().getId() : null);
     }
 
+
     @Transactional
     @Override
-    public void removeTweet(Long id) {
+    public void removeTweet(Long id,Long userId) {
         Tweet tweet = tweetRepository.findById(id).orElseThrow(()->new TweetNotFoundException("Tweet with " + id + " not found"));
-        String currentUserName = SecurityContextHolder.getContext().getAuthentication().getName();
-        if(!currentUserName.equals(tweet.getUser().getUserName())){
+
+        if(!tweet.getUser().getId().equals(userId)){
             throw new  ForbiddenException("You are not allowed to remove this tweet");
         }
         Statistics statistics = tweet.getStatistics();
@@ -85,16 +86,14 @@ public class TweetServiceImpl implements TweetService {
     }
 
     @Override
-    public List<TweetResponse> findAllTweets() {
-        return tweetRepository.findAll()
-                .stream()
-                .map(tweet ->  new TweetResponse(
+    public Page<TweetResponse> findAllTweets(Pageable pageable) {
+        return tweetRepository.findAll(pageable)
+                .map(tweet -> new TweetResponse(
                         tweet.getContent(),
                         tweet.getUser().getId(),
                         tweet.getLocation(),
                         tweet.getParent() != null ? tweet.getParent().getId() : null
-                ))
-                .toList();
+                ));
     }
 
     @Override
@@ -113,6 +112,13 @@ public class TweetServiceImpl implements TweetService {
         tweet.setContent(request.content());
         tweetRepository.save(tweet);
         return new TweetResponse(tweet.getContent(), tweet.getId(),  tweet.getLocation(), tweet.getParent() != null ? tweet.getParent().getId() : null);
+    }
+
+    @Override
+    public Page<TweetResponse> findByContentContaining(String keyword, Pageable pageable) {
+
+        Page<Tweet> tweets = tweetRepository.findByContentContaining(keyword,pageable);
+        return tweets.map(tweet -> new TweetResponse(tweet.getContent(), tweet.getId(),tweet.getLocation(), tweet.getParent() != null ? tweet.getParent().getId() : null));
     }
 
 }
