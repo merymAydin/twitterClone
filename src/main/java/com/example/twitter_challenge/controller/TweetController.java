@@ -56,4 +56,47 @@ public class TweetController {
     public Page<TweetResponse> getTweetsByContentContaining(@RequestParam String keyword, Pageable pageable) {
         return tweetService.findByContentContaining(keyword, pageable);
     }
+    @PostMapping("/{id}/retweet")
+    public TweetResponse retweetTweet(@PathVariable Long id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = (String) authentication.getPrincipal();
+        UserResponse user = userService.findByUserName(username);
+        return tweetService.retweet(id, user.userId());
+    }
+
+    @DeleteMapping("/{id}/retweet")
+    public ResponseEntity<Void> unRetweet(@PathVariable Long id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = (String) authentication.getPrincipal();
+        UserResponse user = userService.findByUserName(username);
+        tweetService.unretweet(id, user.userId());
+        return  ResponseEntity.noContent().build();
+    }
+    @PostMapping("/{id}/quote")
+    public TweetResponse quoteTweet(
+            @PathVariable Long id,
+            @RequestBody CreateTweetRequest request) {
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String username = (String) authentication.getPrincipal();
+
+        UserResponse user = userService.findByUserName(username);
+
+        return tweetService.quoteTweet(
+                id,
+                user.userId(),
+                request.content()
+        );
+    }
+
+    @DeleteMapping("/{quoteTweetId}/quote")
+    public ResponseEntity<Void> removeQuote(@PathVariable Long quoteTweetId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = (String) authentication.getPrincipal();
+        UserResponse user = userService.findByUserName(username);
+        tweetService.removeQuote(quoteTweetId, user.userId());
+        return  ResponseEntity.noContent().build();
+    }
 }

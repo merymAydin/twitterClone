@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface BookmarkService {
     BookmarkResponse createBookmark(CreateBookmarkRequest request);
-    void removeBookmark(CreateBookmarkRequest request);
+    void removeBookmark(CreateBookmarkRequest request,Long userId);
     List<BookmarkResponse> findAllBookmarks();
     BookmarkResponse findBookmarkById(Long id);
 }

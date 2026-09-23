@@ -1,10 +1,14 @@
 package com.example.twitter_challenge.controller;
 
 import com.example.twitter_challenge.Service.interfaces.BookmarkService;
+import com.example.twitter_challenge.Service.interfaces.UserService;
 import com.example.twitter_challenge.dto.request.CreateBookmarkRequest;
 import com.example.twitter_challenge.dto.response.BookmarkResponse;
+import com.example.twitter_challenge.dto.response.UserResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,8 +17,11 @@ import java.util.List;
 @RequestMapping("/bookmarks")
 public class BookmarkController {
     private final BookmarkService bookmarkService;
-    public BookmarkController(BookmarkService bookmarkService) {
+    private final UserService userService;
+
+    public BookmarkController(BookmarkService bookmarkService, UserService userService) {
         this.bookmarkService = bookmarkService;
+        this.userService = userService;
     }
 
     @PostMapping
@@ -23,7 +30,10 @@ public class BookmarkController {
     }
     @DeleteMapping
     public ResponseEntity<Void> deleteBookmark(@Valid @RequestBody CreateBookmarkRequest request){
-        bookmarkService.removeBookmark(request);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = (String) authentication.getPrincipal();
+        UserResponse user = userService.findByUserName(username);
+        bookmarkService.removeBookmark(request,user.userId());
         return ResponseEntity.noContent().build();
     }
     @GetMapping

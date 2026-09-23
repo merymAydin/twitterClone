@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 
+
+
 @Service
 public class StatisticsServicempl implements StatisticsService {
     private StatisticsRepository statisticsRepository;
@@ -21,19 +23,19 @@ public class StatisticsServicempl implements StatisticsService {
     @Override
     public StatisticsResponse findById(Long id) {
         Statistics statistics = statisticsRepository.findById(id).orElseThrow(() -> new StatisticsNotFoundException("Statistics with " + id + " not found"));
-        return new StatisticsResponse(statistics.getTweet().getId(),statistics.getViews(), statistics.getLikes(), statistics.getComments(), statistics.getBookmarks(), statistics.getRetweets());
+        return new StatisticsResponse(statistics.getTweet().getId(),statistics.getViews(), statistics.getLikes(), statistics.getComments(), statistics.getBookmarks(), statistics.getRetweets(),statistics.getQuotes());
     }
 
     @Override
     public StatisticsResponse findByTweetId(Long id) {
         Statistics statistics = statisticsRepository.findByTweetId(id).orElseThrow(() -> new StatisticsNotFoundException("Statistics not found"));
-        return new StatisticsResponse(statistics.getTweet().getId(),statistics.getViews(), statistics.getLikes(), statistics.getComments(), statistics.getBookmarks(), statistics.getRetweets());
+        return new StatisticsResponse(statistics.getTweet().getId(),statistics.getViews(), statistics.getLikes(), statistics.getComments(), statistics.getBookmarks(), statistics.getRetweets(),statistics.getQuotes());
 
     }
 
     @Override
     public List<StatisticsResponse> findAll() {
-        return  statisticsRepository.findAll()
+        return statisticsRepository.findAll()
                 .stream()
                 .map(stats -> new StatisticsResponse(
                         stats.getTweet().getId(),
@@ -41,7 +43,8 @@ public class StatisticsServicempl implements StatisticsService {
                         stats.getLikes(),
                         stats.getComments(),
                         stats.getBookmarks(),
-                        stats.getRetweets()
+                        stats.getRetweets(),
+                        stats.getQuotes()
                 ))
                 .toList();
     }

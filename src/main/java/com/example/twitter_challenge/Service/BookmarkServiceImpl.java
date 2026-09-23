@@ -62,13 +62,13 @@ public class BookmarkServiceImpl implements BookmarkService {
 
     @Transactional
     @Override
-    public void removeBookmark(CreateBookmarkRequest request) {
-        Bookmark bookmark = bookmarkRepository.findByTweetIdAndUserId(request.tweetId(), request.userId()).orElseThrow(()->
+    public void removeBookmark(CreateBookmarkRequest request,Long userId) {
+        Bookmark bookmark = bookmarkRepository.findByTweetIdAndUserId(
+                request.tweetId(),
+                userId
+        ).orElseThrow(()->
                 new BookmarkNotFoundException("Bookmark with" + request.tweetId() + " not found"));
-        String curUsername = SecurityContextHolder.getContext().getAuthentication().getName();
-        if(!curUsername.equals(bookmark.getUser().getUserName())){
-            throw new  ForbiddenException("You are not allowed to remove this bookmark");
-        }
+
         Statistics statistics = statisticsRepository.findByTweetId(bookmark.getTweet().getId()).orElseThrow(()->new StatisticsNotFoundException("Statistics for tweet " + bookmark.getTweet().getId() + " not found"));
         statistics.setBookmarks(statistics.getBookmarks() - 1);
         statisticsRepository.save(statistics);

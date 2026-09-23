@@ -19,6 +19,8 @@ public class Statistics extends EntityBase{
     private Long comments;
     private Long bookmarks;
     private Long retweets;
+    @Column(name = "quotes", nullable = false)
+    private Long quotes = 0L;
 }
 
 
