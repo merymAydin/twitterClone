@@ -36,35 +36,34 @@ public class FollowerServiceImpl implements FollowerService {
     @Transactional
     @Override
     public FollowerResponse createFollower(CreateFollowerRequest request) {
-        if (request.followerId().equals(request.followingId())) {
-            throw new FollowerSelfFollowException(
-                    "User " + request.followerId() + " cannot follow themselves"
-            );
+        String curName = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        User followerUser = userRepository.findByUserName(curName)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "User with username " + curName + " not found"
+                        )
+                );
+
+        if (followerUser.getId().equals(request.followingId())) {
+            throw new FollowerSelfFollowException("You can't follow yourself");
         }
 
+
         Optional<Follower> existingFollower = followerRepository.findByFollowerIdAndFollowingId(
-                request.followerId(),
+                followerUser.getId(),
                 request.followingId()
         );
         if (existingFollower.isPresent()) {
             throw new FollowerAlreadyExistsException(
-                    "User " + request.followerId() + " has already followed user " + request.followingId()
+                    "User " + followerUser.getId() + " has already followed user " + request.followingId()
             );
         }
         User followingUser = userRepository.findById(request.followingId())
                 .orElseThrow(() ->
                         new UserNotFoundException("User with " + request.followingId() + " not found")
                 );
-        User followerUser = userRepository.findById(request.followerId())
-                .orElseThrow(() ->
-                        new UserNotFoundException(
-                                "User with " + request.followerId() + " not found"
-                        )
-                );
-        String curName = SecurityContextHolder.getContext().getAuthentication().getName();
-        if(!curName.equals(followerUser.getUserName())){
-            throw new ForbiddenException("You are not allowed to follow this user");
-        }
+
 
         Follower follower = new Follower(followerUser,followingUser);
         Follower savedFollower = followerRepository.save(follower);
@@ -79,19 +78,25 @@ public class FollowerServiceImpl implements FollowerService {
     @Transactional
     @Override
     public void removeFollower(CreateFollowerRequest  request) {
-        Follower follower = followerRepository.findByFollowerIdAndFollowingId(request.followerId(),request.followingId()).orElseThrow(
+
+        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        User followerUser = userRepository.findByUserName(currentUsername)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "User with username " + currentUsername + " not found"
+                        )
+                );
+        Follower follower = followerRepository.findByFollowerIdAndFollowingId(followerUser.getId(),request.followingId()).orElseThrow(
                 ()->new FollowerNotFoundException(
                         "Follower relationship between user "
-                                + request.followerId()
+                                + followerUser.getId()
                                 + " and user "
                                 + request.followingId()
                                 + " not found"
                 )
         );
-        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
-        if (!currentUsername.equals(follower.getFollower().getUserName())){
-            throw new ForbiddenException("You are not allowed to remove this follower");
-        }
+
+
         followerRepository.delete(follower);
     }
 

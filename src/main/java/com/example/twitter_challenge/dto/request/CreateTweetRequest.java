@@ -5,5 +5,5 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 
-public record CreateTweetRequest( @NotBlank String content,@NotNull Long userId, Location location, Long parentId) {
+public record CreateTweetRequest( @NotBlank String content,Location location, Long parentId) {
 }

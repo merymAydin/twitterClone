@@ -36,26 +36,25 @@ public class LikeServiceImpl implements LikeService {
     @Transactional
     @Override
     public LikeResponse createLike(CreateLikeRequest request) {
+        String curName = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUserName(curName)
+                .orElseThrow(() ->
+                        new UserNotFoundException("User with username " + curName + " not found")
+                );
+
         Optional<Likes> existingLike =
                 likesRepository.findByTweetIdAndUserId(
                         request.tweetId(),
-                        request.userId()
+                        user.getId()
                 );
         if (existingLike.isPresent()) {
             throw new LikeAlreadyExistsException(
-                    "User " + request.userId() + " has already liked tweet " + request.tweetId()
+                    "User " + user.getId() + " has already liked tweet " + request.tweetId()
             );
         }
 
         Tweet tweet = tweetRepository.findById(request.tweetId()).orElseThrow(() -> new TweetNotFoundException("Tweet with" + request.tweetId() + "not found"));
-        User user = userRepository.findById(request.userId())
-                .orElseThrow(() ->
-                        new UserNotFoundException("User with " + request.userId() + " not found")
-                );
-        String curName = SecurityContextHolder.getContext().getAuthentication().getName();
-        if (!curName.equals(user.getUserName())){
-            throw new ForbiddenException("you are not allowed to like this tweet");
-        }
+
 
         Likes likes = new Likes(tweet, user);
 

@@ -37,21 +37,26 @@ public class BookmarkServiceImpl implements BookmarkService {
     @Transactional
     @Override
     public BookmarkResponse createBookmark(CreateBookmarkRequest request) {
-        Optional<Bookmark> existingBookmark = bookmarkRepository.findByTweetIdAndUserId(request.tweetId(), request.userId());
+        String curName = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUserName(curName)
+                .orElseThrow(() ->
+                        new UserNotFoundException("User with " + curName + " not found")
+                );
+
+        Optional<Bookmark> existingBookmark =
+                bookmarkRepository.findByTweetIdAndUserId(
+                        request.tweetId(),
+                        user.getId()
+                );
+
         if (existingBookmark.isPresent()) {
             throw new BookmarkAlreadyExistsException(
-                    "User " + request.userId() + " has already bookmarked tweet " + request.tweetId()
+                    "User " + user.getId() + " has already bookmarked tweet " + request.tweetId()
             );
         }
         Tweet tweet = tweetRepository.findById(request.tweetId()).orElseThrow(()-> new TweetNotFoundException("Tweet with" + request.tweetId()+ "not found"));
-        User user = userRepository.findById(request.userId())
-                .orElseThrow(() ->
-                        new UserNotFoundException("User with " + request.userId() + " not found")
-                );
-        String curName = SecurityContextHolder.getContext().getAuthentication().getName();
-        if(!curName.equals(user.getUserName())){
-            throw new ForbiddenException("You are not allowed to bookmark");
-        }
+
+
         Bookmark bookmark = new Bookmark(user,tweet);
         Bookmark savedBookmark = bookmarkRepository.save(bookmark);
         Statistics statistics = statisticsRepository.findByTweetId(savedBookmark.getTweet().getId()).orElseThrow(()->new RuntimeException("Statistics for tweet " + savedBookmark.getTweet().getId() + " not found"));

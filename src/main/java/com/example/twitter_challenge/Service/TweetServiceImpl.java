@@ -67,14 +67,12 @@ public class TweetServiceImpl implements TweetService {
 
     @Override
     public TweetResponse createTweet(CreateTweetRequest request) {
-        User user = userRepository.findById(request.userId())
-                .orElseThrow(() ->
-                        new UserNotFoundException("User with " + request.userId() + " not found")
-                );
+
         String curName = SecurityContextHolder.getContext().getAuthentication().getName();
-        if(!curName.equals(user.getUserName())){
-            throw new ForbiddenException("You are not allowed to create this tweet");
-        }
+        User user = userRepository.findByUserName(curName)
+                .orElseThrow(() ->
+                        new UserNotFoundException("User with username " + curName + " not found")
+                );
 
         Tweet parentTweet =null;
         if (request.parentId() != null) {
@@ -168,6 +166,11 @@ public class TweetServiceImpl implements TweetService {
         User user = userRepository.findById(currentUserId)
                 .orElseThrow(()->new UserNotFoundException("User with " + currentUserId+ " not found"));
 
+        Optional<Tweet> rettw = tweetRepository.findByParentIdAndUserId(originalTweetId,currentUserId);
+        if(rettw.isPresent()){
+            throw new  ForbiddenException("You already retweeted this tweet");
+        }
+
         Tweet retweetedTweet = new Tweet();
         retweetedTweet.setParent(tweet);
         retweetedTweet.setUser(user);
@@ -185,7 +188,7 @@ public class TweetServiceImpl implements TweetService {
     @Transactional
     @Override
     public void unretweet(Long originalTweetId, Long currentUserId) {
-        Tweet tweet = tweetRepository.findById(originalTweetId).orElseThrow(()->new TweetNotFoundException("Tweet with " + originalTweetId+ " not found"));
+        Tweet tweet = tweetRepository.findById(originalTweetId).orElseThrow(()->new TweetNotFoundException("Retweet not found for user " + currentUserId));
 
 
         Tweet retweet = tweetRepository.findByParentIdAndUserId(originalTweetId,currentUserId).orElseThrow(()->new TweetNotFoundException("Tweet with " + currentUserId+ " not found"));

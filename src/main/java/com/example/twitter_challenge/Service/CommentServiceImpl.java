@@ -36,14 +36,13 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public CommentResponse createComment(CreateCommentRequest request) {
 
-        User user = userRepository.findById(request.userId())
-                .orElseThrow(() ->
-                        new UserNotFoundException("User with " + request.userId() + " not found")
-                );
+
         String curName = SecurityContextHolder.getContext().getAuthentication().getName();
-        if(!curName.equals(user.getUserName())){
-            throw new ForbiddenException("You are not allowed to create this comment");
-        }
+        User user = userRepository.findByUserName(curName)
+                .orElseThrow(() ->
+                        new UserNotFoundException("User with " + curName + " name not found")
+                );
+
         Tweet tweet = tweetRepository.findById(request.tweetId()).orElseThrow(()-> new TweetNotFoundException("Tweet with" + request.tweetId()+ "not found"));
         Comment comment = new Comment(tweet,user,request.content());
         Comment savedComment = commentRepository.save(comment);

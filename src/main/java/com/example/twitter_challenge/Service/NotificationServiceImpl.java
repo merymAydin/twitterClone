@@ -12,13 +12,12 @@ import com.example.twitter_challenge.exception.NotificationNotFoundException;
 import com.example.twitter_challenge.exception.UserNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
 public class NotificationServiceImpl implements NotificationService {
     private final UserRepository userRepository;
-    private NotificationRepository notificationRepository;
+    private final NotificationRepository notificationRepository;
     public NotificationServiceImpl(NotificationRepository notificationRepository, UserRepository userRepository) {
         this.notificationRepository = notificationRepository;
         this.userRepository = userRepository;
