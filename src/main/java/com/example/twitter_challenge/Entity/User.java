@@ -31,6 +31,8 @@ public class User extends EntityBase{
     private String photo;
     private String banner;
 
+    private String stripeCustomerId;
+
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
 

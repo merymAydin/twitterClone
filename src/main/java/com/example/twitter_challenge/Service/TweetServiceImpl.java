@@ -1,11 +1,10 @@
 package com.example.twitter_challenge.Service;
 
-import com.example.twitter_challenge.Entity.Statistics;
-import com.example.twitter_challenge.Entity.Tweet;
-import com.example.twitter_challenge.Entity.User;
+import com.example.twitter_challenge.Entity.*;
 import com.example.twitter_challenge.Repository.StatisticsRepository;
 import com.example.twitter_challenge.Repository.TweetRepository;
 import com.example.twitter_challenge.Repository.UserRepository;
+import com.example.twitter_challenge.Service.interfaces.NotificationService;
 import com.example.twitter_challenge.Service.interfaces.TweetService;
 import com.example.twitter_challenge.dto.request.CreateTweetRequest;
 import com.example.twitter_challenge.dto.request.UpdateTweetRequest;
@@ -19,11 +18,12 @@ import com.example.twitter_challenge.exception.UserNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 @Service
@@ -31,13 +31,28 @@ public class TweetServiceImpl implements TweetService {
     private final UserRepository userRepository;
     private final TweetRepository tweetRepository;
     private final StatisticsRepository statisticsRepository;
+    private final NotificationService notificationService;
 
 
-
-    public TweetServiceImpl(UserRepository userRepository, TweetRepository tweetRepository, StatisticsRepository statisticsRepository) {
+    public TweetServiceImpl(UserRepository userRepository, TweetRepository tweetRepository, StatisticsRepository statisticsRepository, NotificationService notificationService) {
         this.userRepository = userRepository;
         this.tweetRepository = tweetRepository;
         this.statisticsRepository = statisticsRepository;
+        this.notificationService = notificationService;
+    }
+
+    private List<String> extractMentionedUsernames(String content) {
+        Set<String> usernames = new HashSet<>();
+
+        Pattern pattern = Pattern.compile("@[a-zA-Z0-9_]+");
+        Matcher matcher = pattern.matcher(content);
+
+        while (matcher.find()) {
+            usernames.add(matcher.group().substring(1));
+        }
+
+
+        return new ArrayList<>(usernames);
     }
 
     private Statistics createStatistics(Tweet tweet) {
@@ -90,7 +105,24 @@ public class TweetServiceImpl implements TweetService {
         tweet.setLocation(request.location());
         tweet.setParent(parentTweet);
         Tweet savedTweet = tweetRepository.save(tweet);
+        List<String> mentionedUsernames = extractMentionedUsernames(request.content());
 
+
+        for (String username : mentionedUsernames) {
+
+            User mentionedUser = userRepository.findByUserName(username)
+                    .orElse(null);
+
+            if (mentionedUser != null) {
+
+                notificationService.create(
+                        user.getId(),
+                        mentionedUser.getId(),
+                        NotificationType.MENTION,
+                        "You were mentioned in a tweet"
+                );
+            }
+        }
         Statistics statistics = createStatistics(savedTweet);
 
         StatisticsResponse statisticsResponse = toStatisticsResponse(statistics);
@@ -261,6 +293,12 @@ public class TweetServiceImpl implements TweetService {
 
         tweetRepository.delete(quote);
 
+    }
+
+    @Override
+    public Page<Tweet> findAllTweetsByUserId(Long userId, Pageable pageable) {
+        Page<Tweet> tweets = tweetRepository.findByUserId(userId,pageable);
+        return tweets;
     }
 
 

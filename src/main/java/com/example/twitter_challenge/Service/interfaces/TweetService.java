@@ -2,6 +2,7 @@ package com.example.twitter_challenge.Service.interfaces;
 
 
 
+import com.example.twitter_challenge.Entity.Tweet;
 import com.example.twitter_challenge.dto.request.CreateTweetRequest;
 import com.example.twitter_challenge.dto.request.UpdateTweetRequest;
 import com.example.twitter_challenge.dto.response.TweetResponse;
@@ -22,5 +23,6 @@ public interface TweetService {
     void unretweet(Long originalTweetId,Long currentUserId);
     TweetResponse quoteTweet(Long originalTweetId,Long currentUserId,String content);
     void removeQuote(Long quoteTweetId,Long currentUserId);
+    Page<Tweet> findAllTweetsByUserId(Long userId , Pageable pageable);
 
 }

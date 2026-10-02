@@ -109,4 +109,11 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(GeminiException.class)
+    public ResponseEntity<ErrorResponse> handleGeminiException(GeminiException exception) {
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_GATEWAY,exception.getMessage(),new Date());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_GATEWAY);
+    }
+
 }
