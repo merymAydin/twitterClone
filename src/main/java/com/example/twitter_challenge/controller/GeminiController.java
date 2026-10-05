@@ -21,13 +21,13 @@ public class GeminiController {
     }
 
     @PostMapping("/rewrite/{tweetId}")
-    public GeminiRewriteRequest<String> rewriteTweet(@PathVariable Long tweetId, @RequestBody String tone){
-        return geminiService.rewriteTweet(tweetId,tone);
+    public String rewriteTweet(@PathVariable Long tweetId,@RequestBody GeminiRewriteRequest request){
+        return geminiService.rewriteTweet(tweetId,request.tone());
     }
 
     @PostMapping("/rewriteDraft")
-    public String rewriteDraft(@RequestBody String content,String tone){
-        return geminiService.rewriteDraft(content,tone);
+    public String rewriteDraft(@RequestBody GeminiRewriteRequest request) {
+        return geminiService.rewriteDraft(request.content(),request.tone());
     }
 
     @PostMapping("/summarizeTweet")

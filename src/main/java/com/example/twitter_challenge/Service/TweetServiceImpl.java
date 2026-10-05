@@ -240,7 +240,8 @@ public class TweetServiceImpl implements TweetService {
     @Transactional
     @Override
     public TweetResponse quoteTweet(Long originalTweetId, Long currentUserId, String content) {
-        Tweet tweet = tweetRepository.findById(originalTweetId).orElseThrow(()->new TweetNotFoundException("Tweet with " + originalTweetId+ " not found"));
+        Tweet tweet = tweetRepository.findById(originalTweetId)
+                .orElseThrow(()->new TweetNotFoundException("Tweet with " + originalTweetId+ " not found"));
         User user = userRepository.findById(currentUserId)
                 .orElseThrow(()->new UserNotFoundException("User with " + currentUserId+ " not found"));
         Tweet quoteTweet = new Tweet();

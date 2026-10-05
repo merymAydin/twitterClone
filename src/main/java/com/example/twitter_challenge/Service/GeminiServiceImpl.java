@@ -17,14 +17,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 
 @Service
 public class GeminiServiceImpl implements GeminiService {
 
     private final UserRepository userRepository;
-    private Client client;
-    private TweetRepository tweetRepository;
+    private final Client client;
+    private final TweetRepository tweetRepository;
     private final static Logger logger = LoggerFactory.getLogger(GeminiServiceImpl.class);
 
 
@@ -37,12 +36,11 @@ public class GeminiServiceImpl implements GeminiService {
     private String generate(String prompt) {
 
         try{
-            String response = client.models.generateContent(
-                    "gemini-2.5-flash",
+            return client.models.generateContent(
+                    "gemini-3.8-flash",
                     prompt,
                     null
             ).text();
-            return response;
         }catch (Exception e) {
             logger.error("Gemini service is currently unavailable",e);
             throw new GeminiException("Gemini service is currently unavailable");
