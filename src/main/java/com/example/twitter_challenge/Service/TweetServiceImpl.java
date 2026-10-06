@@ -16,6 +16,7 @@ import com.example.twitter_challenge.exception.StatisticsNotFoundException;
 import com.example.twitter_challenge.exception.TweetNotFoundException;
 import com.example.twitter_challenge.exception.UserNotFoundException;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,7 +26,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
+@Slf4j
 @Service
 public class TweetServiceImpl implements TweetService {
     private final UserRepository userRepository;
@@ -123,7 +124,11 @@ public class TweetServiceImpl implements TweetService {
                 );
             }
         }
+
+        log.info("Tweet created: tweetId={}, userId={}", savedTweet.getId(), user.getId());
+
         Statistics statistics = createStatistics(savedTweet);
+
 
         StatisticsResponse statisticsResponse = toStatisticsResponse(statistics);
 

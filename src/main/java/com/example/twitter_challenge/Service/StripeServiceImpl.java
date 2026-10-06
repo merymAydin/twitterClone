@@ -11,14 +11,16 @@ import com.stripe.model.PaymentMethod;
 import com.stripe.model.SetupIntent;
 import com.stripe.model.Subscription;
 import com.stripe.param.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 public class StripeServiceImpl implements StripeService {
 
-    private StripeClient stripeClient;
-    private UserRepository userRepository;
+    private final StripeClient stripeClient;
+    private final UserRepository userRepository;
 
     @Value("${stripe.premium-price-id}")
     private String premiumPriceId;
@@ -34,14 +36,21 @@ public class StripeServiceImpl implements StripeService {
                 .setEmail(email)
                 .setName(username)
                 .build();
+
         try {
             Customer response = stripeClient.v1().customers().create(params);
-            User user = userRepository.findByEmail(email).orElseThrow(()->new UserNotFoundException("User not found"));
+            User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found"));
             user.setStripeCustomerId(response.getId());
             userRepository.save(user);
+            log.info("Stripe customer created: customerId={}, username={}", response.getId(), username);
             return user.getStripeCustomerId();
         } catch (StripeException e) {
-            throw new RuntimeException(e);
+            log.error(
+                    "Failed to create Stripe customer: username={}",
+                    username,
+                    e
+            );
+            throw new RuntimeException("Failed to create Stripe customer", e);
         }
     }
 
@@ -56,6 +65,7 @@ public class StripeServiceImpl implements StripeService {
         if (customerId == null || customerId.isBlank()) {
             throw new IllegalStateException("User has no Stripe customer");
         }
+
 
         try {
             Customer customer = stripeClient.v1()
@@ -86,10 +96,20 @@ public class StripeServiceImpl implements StripeService {
             Subscription subscription = stripeClient.v1()
                     .subscriptions()
                     .create(params);
+            log.info(
+                    "Stripe subscription created: subscriptionId={}, customerId={}",
+                    subscription.getId(),
+                    customerId
+            );
 
             return subscription.getId();
 
         } catch (StripeException e) {
+            log.error(
+                    "Failed to create Stripe subscription: customerId={}",
+                    customerId,
+                    e
+            );
             throw new RuntimeException("Failed to create subscription", e);
         }
     }
@@ -143,8 +163,17 @@ public class StripeServiceImpl implements StripeService {
             stripeClient.v1()
                     .customers()
                     .update(customerId, updateParams);
+            log.info(
+                    "Stripe payment method attached: customerId={}",
+                    customerId
+            );
 
         } catch (StripeException e) {
+            log.error(
+                    "Failed to attach Stripe payment method: customerId={}",
+                    customerId,
+                    e
+            );
             throw new RuntimeException("Failed to attach payment method", e);
         }
     }
@@ -166,10 +195,20 @@ public class StripeServiceImpl implements StripeService {
             SetupIntent setupIntent = stripeClient.v1()
                     .setupIntents()
                     .create(params);
+            log.info(
+                    "Stripe SetupIntent created: setupIntentId={}, customerId={}",
+                    setupIntent.getId(),
+                    customerId
+            );
 
             return setupIntent.getClientSecret();
 
         } catch (StripeException e) {
+            log.error(
+                    "Failed to create SetupIntent: customerId={}",
+                    customerId,
+                    e
+            );
             throw new RuntimeException("Failed to create SetupIntent", e);
         }
 
