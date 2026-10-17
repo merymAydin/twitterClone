@@ -31,17 +31,17 @@ public class JwtService {
     }
 
 
-    public String generateToken(String username){
+    public String generateToken(String email){
 
         return Jwts.builder()
-                .subject(username)
+                .subject(email)
                 .issuedAt(Date.from(Instant.now()))
                 .expiration(Date.from(Instant.now()
                         .plusSeconds(3600)))
                 .signWith(secretKey).compact();
     }
 
-    public String extractUsername(String token) {
+    public String extractEmail(String token) {
         Jws<Claims> jws = Jwts.parser()
                 .verifyWith(secretKey)
                 .build()

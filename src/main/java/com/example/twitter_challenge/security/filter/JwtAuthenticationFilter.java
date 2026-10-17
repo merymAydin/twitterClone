@@ -31,13 +31,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if(authHeader != null && authHeader.startsWith("Bearer ")) {
             try {
                 String token = authHeader.substring("Bearer ".length());
-                String username = jwtService.extractUsername(token);
-                UserDetails userDetails =customUserDetailsService.loadUserByUsername(username);
+                String email = jwtService.extractEmail(token);
+                UserDetails userDetails =customUserDetailsService.loadUserByUsername(email);
                 if(!userDetails.isEnabled()) {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     return;
                 }
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(username,null, userDetails.getAuthorities());
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(email,null, userDetails.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }catch (Exception e) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

@@ -26,10 +26,11 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getUsername() {
-        return user.getUserName();
+        return user.getEmail();
     }
 
-    public boolean isEnabled(){
+    @Override
+    public boolean isEnabled() {
         return !user.getIsDeleted();
     }
 

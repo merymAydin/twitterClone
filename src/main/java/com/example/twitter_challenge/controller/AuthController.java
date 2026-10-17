@@ -1,6 +1,7 @@
 package com.example.twitter_challenge.controller;
 
 import com.example.twitter_challenge.dto.request.LoginRequest;
+import com.example.twitter_challenge.dto.response.LoginResponse;
 import com.example.twitter_challenge.security.config.CustomUserDetails;
 import com.example.twitter_challenge.security.service.JwtService;
 import jakarta.validation.Valid;
@@ -26,19 +27,19 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.username(),
+                        request.email(),
                         request.password()
                 )
         );
         if (authentication.isAuthenticated()) {
-            return ResponseEntity.ok(jwtService.generateToken(request.username()));
+            return ResponseEntity.ok(new LoginResponse(jwtService.generateToken(request.email())));
         }
 
-        return new ResponseEntity<>("", HttpStatus.UNAUTHORIZED);
+        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 
     }
 }
