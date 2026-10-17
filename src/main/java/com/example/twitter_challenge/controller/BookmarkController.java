@@ -31,8 +31,8 @@ public class BookmarkController {
     @DeleteMapping
     public ResponseEntity<Void> deleteBookmark(@Valid @RequestBody CreateBookmarkRequest request){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = (String) authentication.getPrincipal();
-        UserResponse user = userService.findByUserName(username);
+        String email = (String) authentication.getPrincipal();
+        UserResponse user = userService.findByEmail(email);
         bookmarkService.removeBookmark(request,user.userId());
         return ResponseEntity.noContent().build();
     }

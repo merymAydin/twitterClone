@@ -2,6 +2,7 @@ package com.example.twitter_challenge.security.config;
 
 import com.example.twitter_challenge.security.filter.JwtAuthenticationFilter;
 import com.example.twitter_challenge.security.service.JwtService;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,6 +37,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/login", "/users").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/tweet").authenticated()
                         .anyRequest().authenticated()
 
                 )

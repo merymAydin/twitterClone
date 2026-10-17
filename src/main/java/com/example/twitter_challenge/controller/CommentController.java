@@ -34,8 +34,8 @@ public class CommentController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> removeComment(@PathVariable Long id){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = (String) authentication.getPrincipal();
-        UserResponse user = userService.findByUserName(username);
+        String email = (String) authentication.getPrincipal();
+        UserResponse user = userService.findByEmail(email);
         commentService.removeComment(id,user.userId());
         return ResponseEntity.noContent().build();
     }
@@ -50,8 +50,8 @@ public class CommentController {
     @PutMapping("/{id}")
     public CommentResponse updateComment(@PathVariable Long id,@Valid @RequestBody UpdateCommentRequest request){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = (String) authentication.getPrincipal();
-        UserResponse user = userService.findByUserName(username);
+        String email = (String) authentication.getPrincipal();
+        UserResponse user = userService.findByEmail(email);
         return commentService.update(id,request,user.userId());
     }
 

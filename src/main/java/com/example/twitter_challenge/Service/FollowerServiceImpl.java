@@ -36,12 +36,12 @@ public class FollowerServiceImpl implements FollowerService {
     @Transactional
     @Override
     public FollowerResponse createFollower(CreateFollowerRequest request) {
-        String curName = SecurityContextHolder.getContext().getAuthentication().getName();
+        String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        User followerUser = userRepository.findByUserName(curName)
+        User followerUser = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() ->
                         new UserNotFoundException(
-                                "User with username " + curName + " not found"
+                                "User with email " + currentUserEmail + " not found"
                         )
                 );
 
@@ -79,11 +79,11 @@ public class FollowerServiceImpl implements FollowerService {
     @Override
     public void removeFollower(CreateFollowerRequest  request) {
 
-        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
-        User followerUser = userRepository.findByUserName(currentUsername)
+        String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        User followerUser = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() ->
                         new UserNotFoundException(
-                                "User with username " + currentUsername + " not found"
+                                "User with email " + currentUserEmail + " not found"
                         )
                 );
         Follower follower = followerRepository.findByFollowerIdAndFollowingId(followerUser.getId(),request.followingId()).orElseThrow(

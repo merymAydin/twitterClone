@@ -57,8 +57,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public void removeUser(Long id) {
         User user = userRepository.findById(id).orElseThrow(()->new UserNotFoundException("User with" + id +"not found"));
-        String curName = SecurityContextHolder.getContext().getAuthentication().getName();
-        if(!curName.equals(user.getUserName())){
+        String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        if(!currentUserEmail.equals(user.getEmail())){
             throw new ForbiddenException("You are not allowed to remove this user");
         }
         user.setIsDeleted(true);
@@ -85,8 +85,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse  update(Long id, UpdateUserRequest request) {
         User user = userRepository.findById(id).orElseThrow(()->new UserNotFoundException("User with " + id + " not found"));
-        String curName = SecurityContextHolder.getContext().getAuthentication().getName();
-        if(!curName.equals(user.getUserName())){
+        String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        if(!currentUserEmail.equals(user.getEmail())){
             throw new ForbiddenException("You are not allowed to update this user");
         }
         user.setUserName(request.username());
@@ -112,6 +112,13 @@ public class UserServiceImpl implements UserService {
         return users.map(user -> new UserResponse(
                 user.getId(),user.getUserName(),user.getEmail(),user.getBirthday(),user.getLocation(),user.getBio(),user.getPhoto(),user.getBanner()
         ));
+    }
+
+    @Override
+    public UserResponse findByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User with email " + email + " not found"));
+        return new UserResponse(user.getId(), user.getUserName(), user.getEmail(), user.getBirthday(), user.getLocation(), user.getBio(), user.getPhoto(), user.getBanner());
     }
 
 

@@ -17,6 +17,7 @@ public interface UserService {
     List<UserResponse> findAll();
     UserResponse update(Long id, UpdateUserRequest request);
     UserResponse findByUserName(String username);
+    UserResponse findByEmail(String email);
     Page<UserResponse> findByUserNameContaining(String userName, Pageable pageable);
 
 }

@@ -37,10 +37,10 @@ public class CommentServiceImpl implements CommentService {
     public CommentResponse createComment(CreateCommentRequest request) {
 
 
-        String curName = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByUserName(curName)
+        String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() ->
-                        new UserNotFoundException("User with " + curName + " name not found")
+                        new UserNotFoundException("User with email " + currentUserEmail + " not found")
                 );
 
         Tweet tweet = tweetRepository.findById(request.tweetId()).orElseThrow(()-> new TweetNotFoundException("Tweet with" + request.tweetId()+ "not found"));

@@ -70,6 +70,9 @@ public class TweetServiceImpl implements TweetService {
 
 
     private StatisticsResponse toStatisticsResponse(Statistics statistics) {
+        if (statistics == null) {
+            return new StatisticsResponse(null, 0L, 0L, 0L, 0L, 0L, 0L);
+        }
         return new StatisticsResponse(
                 statistics.getTweet().getId(),
                 statistics.getViews(),
@@ -84,10 +87,10 @@ public class TweetServiceImpl implements TweetService {
     @Override
     public TweetResponse createTweet(CreateTweetRequest request) {
 
-        String curName = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByUserName(curName)
+        String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() ->
-                        new UserNotFoundException("User with username " + curName + " not found")
+                        new UserNotFoundException("User with email " + currentUserEmail + " not found")
                 );
 
         Tweet parentTweet =null;
@@ -128,14 +131,13 @@ public class TweetServiceImpl implements TweetService {
         log.info("Tweet created: tweetId={}, userId={}", savedTweet.getId(), user.getId());
 
         Statistics statistics = createStatistics(savedTweet);
-
+        statisticsRepository.save(statistics);
+        savedTweet.setStatistics(statistics);
+        tweetRepository.save(savedTweet);
 
         StatisticsResponse statisticsResponse = toStatisticsResponse(statistics);
-
-
-        statisticsRepository.save(statistics);
-        return new TweetResponse(savedTweet.getContent(), savedTweet.getUser().getId(), savedTweet.getLocation(),
-                savedTweet.getParent() != null ? savedTweet.getParent().getId() : null,statisticsResponse);
+        return new TweetResponse(savedTweet.getId(), savedTweet.getContent(), savedTweet.getUser().getId(), savedTweet.getLocation(),
+                savedTweet.getParent() != null ? savedTweet.getParent().getId() : null, statisticsResponse);
     }
 
 
@@ -157,6 +159,7 @@ public class TweetServiceImpl implements TweetService {
 
         return tweetRepository.findAll(pageable)
                 .map(tweet -> new TweetResponse(
+                        tweet.getId(),
                         tweet.getContent(),
                         tweet.getUser().getId(),
                         tweet.getLocation(),
@@ -169,6 +172,7 @@ public class TweetServiceImpl implements TweetService {
     public TweetResponse findTweetById(Long id) {
         Tweet tweet = tweetRepository.findById(id).orElseThrow(()->new TweetNotFoundException("Tweet with " + id + " not found"));
         return new TweetResponse(
+                tweet.getId(),
                 tweet.getContent(),
                 tweet.getUser().getId(),
                 tweet.getLocation(),
@@ -179,20 +183,20 @@ public class TweetServiceImpl implements TweetService {
     @Override
     public TweetResponse update(Long id, UpdateTweetRequest request) {
         Tweet tweet = tweetRepository.findById(id).orElseThrow(()->new TweetNotFoundException("Tweet with " + id + " not found"));
-        String currentUserName = SecurityContextHolder.getContext().getAuthentication().getName();
-        if(!currentUserName.equals(tweet.getUser().getUserName())){
+        String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        if(!currentUserEmail.equals(tweet.getUser().getEmail())){
             throw new  ForbiddenException("You are not allowed to update this tweet");
         }
         tweet.setContent(request.content());
         tweetRepository.save(tweet);
-        return new TweetResponse(tweet.getContent(), tweet.getId(),  tweet.getLocation(), tweet.getParent() != null ? tweet.getParent().getId() : null,toStatisticsResponse(tweet.getStatistics()));
+        return new TweetResponse(tweet.getId(), tweet.getContent(), tweet.getUser().getId(), tweet.getLocation(), tweet.getParent() != null ? tweet.getParent().getId() : null, toStatisticsResponse(tweet.getStatistics()));
     }
 
     @Override
     public Page<TweetResponse> findByContentContaining(String keyword, Pageable pageable) {
 
         Page<Tweet> tweets = tweetRepository.findByContentContaining(keyword,pageable);
-        return tweets.map(tweet -> new TweetResponse(tweet.getContent(), tweet.getId(),tweet.getLocation(), tweet.getParent() != null ? tweet.getParent().getId() : null,toStatisticsResponse(tweet.getStatistics())));
+        return tweets.map(tweet -> new TweetResponse(tweet.getId(), tweet.getContent(), tweet.getUser().getId(), tweet.getLocation(), tweet.getParent() != null ? tweet.getParent().getId() : null, toStatisticsResponse(tweet.getStatistics())));
     }
 
     @Transactional
@@ -213,12 +217,18 @@ public class TweetServiceImpl implements TweetService {
         retweetedTweet.setUser(user);
 
         Statistics statistics = tweet.getStatistics();
+        if (statistics == null) {
+            statistics = createStatistics(tweet);
+            statisticsRepository.save(statistics);
+            tweet.setStatistics(statistics);
+            tweetRepository.save(tweet);
+        }
         statistics.setRetweets(statistics.getRetweets() + 1);
         statisticsRepository.save(statistics);
 
 
         tweetRepository.save(retweetedTweet);
-        return new TweetResponse(tweet.getContent(),retweetedTweet.getId(),retweetedTweet.getLocation(), retweetedTweet.getParent() != null ? retweetedTweet.getParent().getId() : null,toStatisticsResponse(tweet.getStatistics()));
+        return new TweetResponse(retweetedTweet.getId(), tweet.getContent(), retweetedTweet.getUser().getId(), retweetedTweet.getLocation(), retweetedTweet.getParent() != null ? retweetedTweet.getParent().getId() : null, toStatisticsResponse(tweet.getStatistics()));
 
     }
 
@@ -267,7 +277,7 @@ public class TweetServiceImpl implements TweetService {
         statisticsRepository.save(quoteStatistics);
 
         StatisticsResponse statisticsResponse = toStatisticsResponse(quoteStatistics);
-        return new TweetResponse(quoteTweet.getContent(), quoteTweet.getId(), quoteTweet.getLocation(), quoteTweet.getParent() != null ? quoteTweet.getParent().getId() : null,statisticsResponse);
+        return new TweetResponse(quoteTweet.getId(), quoteTweet.getContent(), quoteTweet.getUser().getId(), quoteTweet.getLocation(), quoteTweet.getParent() != null ? quoteTweet.getParent().getId() : null, statisticsResponse);
     }
 
     @Transactional

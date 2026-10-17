@@ -37,10 +37,10 @@ public class BookmarkServiceImpl implements BookmarkService {
     @Transactional
     @Override
     public BookmarkResponse createBookmark(CreateBookmarkRequest request) {
-        String curName = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByUserName(curName)
+        String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() ->
-                        new UserNotFoundException("User with " + curName + " not found")
+                        new UserNotFoundException("User with email " + currentUserEmail + " not found")
                 );
 
         Optional<Bookmark> existingBookmark =

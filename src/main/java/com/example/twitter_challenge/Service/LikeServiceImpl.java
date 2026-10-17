@@ -36,10 +36,10 @@ public class LikeServiceImpl implements LikeService {
     @Transactional
     @Override
     public LikeResponse createLike(CreateLikeRequest request) {
-        String curName = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByUserName(curName)
+        String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() ->
-                        new UserNotFoundException("User with username " + curName + " not found")
+                        new UserNotFoundException("User with email " + currentUserEmail + " not found")
                 );
 
         Optional<Likes> existingLike =

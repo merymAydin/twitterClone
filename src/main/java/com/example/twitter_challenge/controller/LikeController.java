@@ -32,8 +32,8 @@ public class LikeController {
     @DeleteMapping
     public ResponseEntity<Void> deleteLike(@Valid @RequestBody CreateLikeRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = (String) authentication.getPrincipal();
-        UserResponse user = userService.findByUserName(username);
+        String email = (String) authentication.getPrincipal();
+        UserResponse user = userService.findByEmail(email);
         likeService.removeLike(request,user.userId());
         return ResponseEntity.noContent().build();
     }

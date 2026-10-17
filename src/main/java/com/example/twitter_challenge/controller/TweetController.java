@@ -33,10 +33,10 @@ public class TweetController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTweet(@PathVariable Long id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = (String) authentication.getPrincipal();
-        UserResponse user = userService.findByUserName(username);
-         tweetService.removeTweet(id, user.userId());
-         return  ResponseEntity.noContent().build();
+        String email = (String) authentication.getPrincipal();
+        UserResponse user = userService.findByEmail(email);
+        tweetService.removeTweet(id, user.userId());
+        return ResponseEntity.noContent().build();
     }
     @GetMapping
     public Page<TweetResponse> findAllTweets(Pageable pageable) {
@@ -59,18 +59,18 @@ public class TweetController {
     @PostMapping("/{id}/retweet")
     public TweetResponse retweetTweet(@PathVariable Long id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = (String) authentication.getPrincipal();
-        UserResponse user = userService.findByUserName(username);
+        String email = (String) authentication.getPrincipal();
+        UserResponse user = userService.findByEmail(email);
         return tweetService.retweet(id, user.userId());
     }
 
     @DeleteMapping("/{id}/retweet")
     public ResponseEntity<Void> unRetweet(@PathVariable Long id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = (String) authentication.getPrincipal();
-        UserResponse user = userService.findByUserName(username);
+        String email = (String) authentication.getPrincipal();
+        UserResponse user = userService.findByEmail(email);
         tweetService.unretweet(id, user.userId());
-        return  ResponseEntity.noContent().build();
+        return ResponseEntity.noContent().build();
     }
     @PostMapping("/{id}/quote")
     public TweetResponse quoteTweet(
@@ -80,9 +80,9 @@ public class TweetController {
         Authentication authentication =
                 SecurityContextHolder.getContext().getAuthentication();
 
-        String username = (String) authentication.getPrincipal();
+        String email = (String) authentication.getPrincipal();
 
-        UserResponse user = userService.findByUserName(username);
+        UserResponse user = userService.findByEmail(email);
 
         return tweetService.quoteTweet(
                 id,
@@ -94,9 +94,9 @@ public class TweetController {
     @DeleteMapping("/{quoteTweetId}/quote")
     public ResponseEntity<Void> removeQuote(@PathVariable Long quoteTweetId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = (String) authentication.getPrincipal();
-        UserResponse user = userService.findByUserName(username);
+        String email = (String) authentication.getPrincipal();
+        UserResponse user = userService.findByEmail(email);
         tweetService.removeQuote(quoteTweetId, user.userId());
-        return  ResponseEntity.noContent().build();
+        return ResponseEntity.noContent().build();
     }
 }

@@ -32,8 +32,8 @@ public class FeedController {
         Authentication authentication = SecurityContextHolder
                 .getContext()
                 .getAuthentication();
-        String userName = (String) authentication.getPrincipal();
-        UserResponse user = userService.findByUserName(userName);
+        String email = (String) authentication.getPrincipal();
+        UserResponse user = userService.findByEmail(email);
         return feedService.getTweets(user.userId(), pageable);
     }
 }

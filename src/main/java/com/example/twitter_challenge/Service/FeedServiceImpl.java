@@ -24,6 +24,9 @@ public class FeedServiceImpl implements FeedService {
     }
 
     private StatisticsResponse toStatisticsResponse(Statistics statistics) {
+        if (statistics == null) {
+            return new StatisticsResponse(null, 0L, 0L, 0L, 0L, 0L, 0L);
+        }
         return new StatisticsResponse(
                 statistics.getTweet().getId(),
                 statistics.getViews(),
@@ -42,6 +45,7 @@ public class FeedServiceImpl implements FeedService {
         List<Long> followingIds = followers.stream().map(follower -> follower.getFollowing().getId()).toList();
         return tweetRepository.findByUserIdIn(followingIds, pageable)
                 .map(tweet -> new TweetResponse(
+                        tweet.getId(),
                         tweet.getContent(),
                         tweet.getUser().getId(),
                         tweet.getLocation(),
