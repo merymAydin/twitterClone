@@ -1,6 +1,7 @@
 package com.example.twitter_challenge;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -9,10 +10,10 @@ import org.springframework.test.context.TestPropertySource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
+@EnabledIfEnvironmentVariable(named = "RUN_REDIS_TESTS", matches = "true")
 @TestPropertySource(properties = {
-        "JWT_SECRET=VGhpc0lzQVN1cGVyTG9uZ1Rlc3RTZWNyZXRGb3JKV1Q=",
-        "GEMINI_API_KEY=test-key",
-        "STRIPE_SECRET_KEY=test-key"
+        "spring.data.redis.host=${REDIS_HOST:localhost}",
+        "spring.data.redis.port=${REDIS_PORT:6379}"
 })
 public class RedisIntegrationTest {
     @Autowired

@@ -1,6 +1,5 @@
 package com.example.twitter_challenge.controller;
 
-import com.example.twitter_challenge.Entity.User;
 import com.example.twitter_challenge.Service.interfaces.NotificationService;
 import com.example.twitter_challenge.Service.interfaces.UserService;
 import com.example.twitter_challenge.dto.response.NotificationResponse;
@@ -9,32 +8,40 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/notifications")
 public class NotificationController {
-    private NotificationService  notificationService;
-    private UserService userService;
+    private final NotificationService notificationService;
+    private final UserService userService;
+
     public NotificationController(NotificationService notificationService, UserService userService) {
         this.notificationService = notificationService;
         this.userService = userService;
     }
+
     @GetMapping
     public Page<NotificationResponse> getNotifications(Pageable pageable) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String userName = (String) authentication.getPrincipal();
-        UserResponse user = userService.findByUserName(userName);
-        return notificationService.findByRecipientId(user.userId(), pageable);
+        return notificationService.findByRecipientId(currentUserId(), pageable);
     }
 
     @PatchMapping("/{id}/read")
-    public NotificationResponse markAsRead(@PathVariable Long id){
+    public NotificationResponse markAsRead(@PathVariable Long id) {
+        return notificationService.markAsRead(id, currentUserId());
+    }
+
+    /**
+     * The verified JWT principal is the account email, not the username. Resolving it as an email
+     * avoids the previous bug where every notification request failed for normal users.
+     */
+    private Long currentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String userName = (String) authentication.getPrincipal();
-        UserResponse user = userService.findByUserName(userName);
-        return notificationService.markAsRead(id, user.userId());
+        UserResponse user = userService.findByEmail(authentication.getName());
+        return user.userId();
     }
 }

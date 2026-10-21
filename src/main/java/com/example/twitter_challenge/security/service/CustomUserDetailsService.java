@@ -18,8 +18,8 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException(""));
+        User user = userRepository.findFirstByEmailIgnoreCaseAndIsDeletedFalseOrderByIdAsc(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Invalid credentials"));
 
 
 

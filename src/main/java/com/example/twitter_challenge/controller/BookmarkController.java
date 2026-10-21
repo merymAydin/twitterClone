@@ -9,7 +9,13 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -25,23 +31,30 @@ public class BookmarkController {
     }
 
     @PostMapping
-    public BookmarkResponse createBookMark(@Valid @RequestBody CreateBookmarkRequest request){
+    public BookmarkResponse createBookMark(@Valid @RequestBody CreateBookmarkRequest request) {
         return bookmarkService.createBookmark(request);
     }
+
     @DeleteMapping
-    public ResponseEntity<Void> deleteBookmark(@Valid @RequestBody CreateBookmarkRequest request){
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = (String) authentication.getPrincipal();
-        UserResponse user = userService.findByEmail(email);
-        bookmarkService.removeBookmark(request,user.userId());
+    public ResponseEntity<Void> deleteBookmark(@Valid @RequestBody CreateBookmarkRequest request) {
+        bookmarkService.removeBookmark(request, currentUserId());
         return ResponseEntity.noContent().build();
     }
+
     @GetMapping
-    public List<BookmarkResponse> getAllBookmarks(){
-        return bookmarkService.findAllBookmarks();
+    public List<BookmarkResponse> getAllBookmarks() {
+        return bookmarkService.findAllBookmarks(currentUserId());
     }
+
     @GetMapping("/{id}")
-    public BookmarkResponse getBookmarkById(@PathVariable Long id){
-        return bookmarkService.findBookmarkById(id);
+    public BookmarkResponse getBookmarkById(@PathVariable Long id) {
+        return bookmarkService.findBookmarkById(id, currentUserId());
+    }
+
+    private Long currentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        UserResponse user = userService.findByEmail(email);
+        return user.userId();
     }
 }

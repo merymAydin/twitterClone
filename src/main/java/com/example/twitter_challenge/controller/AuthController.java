@@ -2,7 +2,6 @@ package com.example.twitter_challenge.controller;
 
 import com.example.twitter_challenge.dto.request.LoginRequest;
 import com.example.twitter_challenge.dto.response.LoginResponse;
-import com.example.twitter_challenge.security.config.CustomUserDetails;
 import com.example.twitter_challenge.security.service.JwtService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -10,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,18 +28,19 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
-
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.email(),
-                        request.password()
-                )
-        );
-        if (authentication.isAuthenticated()) {
-            return ResponseEntity.ok(new LoginResponse(jwtService.generateToken(request.email())));
+        String email = request.email().trim();
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(email, request.password())
+            );
+            if (!authentication.isAuthenticated()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+            // Use the stored canonical email, not the caller-provided spelling, as the JWT subject.
+            return ResponseEntity.ok(new LoginResponse(jwtService.generateToken(authentication.getName())));
+        } catch (AuthenticationException exception) {
+            // Do not reveal whether the email exists or the password was wrong.
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-
-        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-
     }
 }

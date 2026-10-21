@@ -9,6 +9,8 @@ import com.example.twitter_challenge.dto.response.TweetResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 
 
 
@@ -17,12 +19,17 @@ public interface TweetService {
     void removeTweet(Long id,Long userId);
     Page<TweetResponse> findAllTweets(Pageable pageable);
     TweetResponse findTweetById(Long id);
-    TweetResponse update(Long id, UpdateTweetRequest request);
+    TweetResponse update(Long id, UpdateTweetRequest request, Long currentUserId);
     Page<TweetResponse> findByContentContaining(String keyword, Pageable pageable);
     TweetResponse retweet(Long originalTweetId,Long currentUserId);
     void unretweet(Long originalTweetId,Long currentUserId);
     TweetResponse quoteTweet(Long originalTweetId,Long currentUserId,String content);
     void removeQuote(Long quoteTweetId,Long currentUserId);
     Page<Tweet> findAllTweetsByUserId(Long userId , Pageable pageable);
+
+    /**
+     * The ids of the original tweets the given user has retweeted.
+     */
+    List<Long> findRetweetedTweetIds(Long userId);
 
 }

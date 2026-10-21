@@ -2,6 +2,7 @@ package com.example.twitter_challenge.controller;
 
 import com.example.twitter_challenge.Service.interfaces.GeminiService;
 import com.example.twitter_challenge.dto.request.GeminiRewriteRequest;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,13 +22,16 @@ public class GeminiController {
     }
 
     @PostMapping("/rewrite/{tweetId}")
-    public String rewriteTweet(@PathVariable Long tweetId,@RequestBody GeminiRewriteRequest request){
-        return geminiService.rewriteTweet(tweetId,request.tone());
+    public String rewriteTweet(
+            @PathVariable Long tweetId,
+            @Valid @RequestBody GeminiRewriteRequest request
+    ) {
+        return geminiService.rewriteTweet(tweetId, request.tone());
     }
 
     @PostMapping("/rewriteDraft")
-    public String rewriteDraft(@RequestBody GeminiRewriteRequest request) {
-        return geminiService.rewriteDraft(request.content(),request.tone());
+    public String rewriteDraft(@Valid @RequestBody GeminiRewriteRequest request) {
+        return geminiService.rewriteDraft(request.content(), request.tone());
     }
 
     @PostMapping("/summarizeTweet")

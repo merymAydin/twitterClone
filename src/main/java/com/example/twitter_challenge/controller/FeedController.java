@@ -1,7 +1,5 @@
 package com.example.twitter_challenge.controller;
 
-
-import com.example.twitter_challenge.Entity.User;
 import com.example.twitter_challenge.Service.interfaces.FeedService;
 import com.example.twitter_challenge.Service.interfaces.UserService;
 import com.example.twitter_challenge.dto.response.TweetResponse;
@@ -13,8 +11,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-
 
 @RestController
 @RequestMapping("/feed")
@@ -28,12 +24,20 @@ public class FeedController {
     }
 
     @GetMapping
-    public Page<TweetResponse> getTweets(Pageable pageable){
-        Authentication authentication = SecurityContextHolder
-                .getContext()
-                .getAuthentication();
-        String email = (String) authentication.getPrincipal();
-        UserResponse user = userService.findByEmail(email);
+    public Page<TweetResponse> getTweets(Pageable pageable) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserResponse user = userService.findByEmail(authentication.getName());
         return feedService.getTweets(user.userId(), pageable);
+    }
+
+    /**
+     * Explore feed: every visible tweet of every active user, newest first.
+     *
+     * <p>It does not depend on the follow graph of the caller. The order is fixed to newest
+     * first, so a client supplied sort is ignored.</p>
+     */
+    @GetMapping("/explore")
+    public Page<TweetResponse> getExploreTweets(Pageable pageable) {
+        return feedService.getExploreTweets(pageable);
     }
 }

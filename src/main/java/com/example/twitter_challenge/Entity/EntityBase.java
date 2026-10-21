@@ -26,4 +26,20 @@ public class EntityBase {
 
     private Boolean isDeleted;
 
+    @PrePersist
+    protected void initializeCommonFields() {
+        Date now = new Date();
+        if (createdAt == null) {
+            createdAt = now;
+        }
+        updatedAt = now;
+        if (isDeleted == null) {
+            isDeleted = false;
+        }
+    }
+
+    @PreUpdate
+    protected void touchUpdatedAt() {
+        updatedAt = new Date();
+    }
 }

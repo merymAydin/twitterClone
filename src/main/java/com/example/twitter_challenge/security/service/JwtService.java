@@ -21,13 +21,27 @@ public class JwtService {
 
 
     @Value("${jwt.secret}")
-
     private String secret;
+
+    @Value("${jwt.expiration-seconds:3600}")
+    private long expirationSeconds;
+
     private SecretKey secretKey;
+
     @PostConstruct
     public void init() {
-        byte[] key = Decoders.BASE64.decode(secret);
-        secretKey = Keys.hmacShaKeyFor(key);
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException("JWT_SECRET must be configured");
+        }
+        try {
+            byte[] key = Decoders.BASE64.decode(secret);
+            secretKey = Keys.hmacShaKeyFor(key);
+        } catch (RuntimeException exception) {
+            throw new IllegalStateException(
+                    "JWT_SECRET must be a Base64-encoded key of at least 256 bits",
+                    exception
+            );
+        }
     }
 
 
@@ -37,7 +51,7 @@ public class JwtService {
                 .subject(email)
                 .issuedAt(Date.from(Instant.now()))
                 .expiration(Date.from(Instant.now()
-                        .plusSeconds(3600)))
+                        .plusSeconds(expirationSeconds)))
                 .signWith(secretKey).compact();
     }
 

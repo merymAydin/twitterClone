@@ -8,8 +8,14 @@ import java.util.List;
 
 public interface CommentService {
     CommentResponse createComment(CreateCommentRequest request);
-    void removeComment(Long id,Long userId);
+
+    void removeComment(Long id, Long userId);
+
     List<CommentResponse> findAllComments();
+
+    List<CommentResponse> findByTweetId(Long tweetId);
+
     CommentResponse findCommentById(Long id);
-    CommentResponse update(Long twitterId, UpdateCommentRequest request,Long userId);
+
+    CommentResponse update(Long commentId, UpdateCommentRequest request, Long userId);
 }

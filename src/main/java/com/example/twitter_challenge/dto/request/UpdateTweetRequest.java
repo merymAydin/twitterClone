@@ -1,7 +1,7 @@
 package com.example.twitter_challenge.dto.request;
 
-import com.example.twitter_challenge.Utils.Commons.Location;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
-public record UpdateTweetRequest(@NotBlank String content) {
+public record UpdateTweetRequest(@NotBlank @Size(max = 255) String content) {
 }
