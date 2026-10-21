@@ -1,0 +1,21 @@
+-- Supports the Explore feed, which lists every visible tweet of every active user
+-- ordered by creation time, newest first:
+--
+--   select ... from tweets t
+--   where t.is_deleted = false and t.user.is_deleted = false
+--   order by t.created_at desc nulls last, t.id desc
+--   limit <size>
+--
+-- The existing idx_tweets_user_created index is leading with user_id and therefore
+-- cannot serve a global newest-first order. The id is part of the index so the order
+-- is total and the pagination can neither repeat nor skip a tweet.
+--
+-- NULLS LAST is part of the index on purpose: tweets created before the creation
+-- timestamp was filled in have a NULL created_at, and they must not jump ahead of
+-- the dated tweets. The id keeps those rows in insertion order.
+--
+-- This migration is additive only: it creates an index and touches no column, no
+-- constraint and no data, so it is safe for an existing database. IF NOT EXISTS keeps
+-- it idempotent for a database that already carries the index.
+CREATE INDEX IF NOT EXISTS idx_tweets_created_id
+    ON public.tweets (created_at DESC NULLS LAST, id DESC);
