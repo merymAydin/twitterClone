@@ -17,6 +17,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
+
 @Service
 public class GeminiServiceImpl implements GeminiService {
 
@@ -42,6 +45,19 @@ public class GeminiServiceImpl implements GeminiService {
     }
 
     private String generate(String prompt) {
+        StringBuilder answer = new StringBuilder();
+        generateStreaming(prompt, answer::append);
+        return answer.toString();
+    }
+
+    /**
+     * Runs the prompt and hands every produced chunk to the consumer as soon as it arrives.
+     *
+     * <p>The timing log separates the time spent inside the Gemini API from the total time of
+     * the backend call, so a slow answer can be attributed to the model and not to the
+     * application.</p>
+     */
+    private void generateStreaming(String prompt, Consumer<String> chunkConsumer) {
         if (apiKey == null || apiKey.isBlank()) {
             throw new GeminiException("Gemini is not configured");
         }
@@ -49,12 +65,13 @@ public class GeminiServiceImpl implements GeminiService {
             throw new IllegalArgumentException("Prompt must not be blank");
         }
 
+        long startedAt = System.nanoTime();
+        AtomicBoolean producedOutput = new AtomicBoolean(false);
         try {
-            String output = geminiGateway.generate(model, prompt);
-            if (output == null || output.isBlank()) {
-                throw new GeminiException("Gemini returned an empty response");
-            }
-            return output;
+            geminiGateway.generateStreaming(model, prompt, chunk -> {
+                producedOutput.set(true);
+                chunkConsumer.accept(chunk);
+            });
         } catch (GeminiException exception) {
             throw exception;
         } catch (Exception exception) {
@@ -62,6 +79,16 @@ public class GeminiServiceImpl implements GeminiService {
             logger.error("Gemini service is currently unavailable", exception);
             throw new GeminiException("Gemini service is currently unavailable");
         }
+
+        if (!producedOutput.get()) {
+            throw new GeminiException("Gemini returned an empty response");
+        }
+        logger.info(
+                "Gemini service call finished: model={}, promptChars={}, durationMs={}",
+                model,
+                prompt.length(),
+                (System.nanoTime() - startedAt) / 1_000_000L
+        );
     }
 
     @Override
@@ -73,6 +100,21 @@ public class GeminiServiceImpl implements GeminiService {
             throw new IllegalArgumentException("Message is too long");
         }
         return generate(message);
+    }
+
+    /**
+     * Answers a chat message and hands every produced chunk to the consumer as soon as it
+     * arrives, so the caller can deliver the answer while it is still being written.
+     */
+    @Override
+    public void chatStreaming(String message, Consumer<String> chunkConsumer) {
+        if (message == null || message.isBlank()) {
+            throw new IllegalArgumentException("Message must not be blank");
+        }
+        if (message.length() > 5000) {
+            throw new IllegalArgumentException("Message is too long");
+        }
+        generateStreaming(message, chunkConsumer);
     }
 
     @Override
